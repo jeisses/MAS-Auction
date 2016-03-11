@@ -1,0 +1,21 @@
+breed [auctioneers auctioneer]
+
+; --- Auctioneer variables ---
+;
+; 1) money: the agent's money
+auctioneers-own [beliefs desire intention]
+
+; --- Setup buyers ---
+to setup-auctioneers  
+  let num_auctioneers 1
+  create-auctioneers num_auctioneers [
+    setxy 0 max-pycor - 3
+    set heading 180
+    set color yellow
+    set shape "person business"
+    
+    set beliefs (list)
+    set desire "maximize-price"
+    set intention false
+  ]
+end

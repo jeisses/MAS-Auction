@@ -1,0 +1,29 @@
+breed [buyers buyer]
+
+; --- Buyer variables ---
+;
+; 1) money: the agent's money
+; 2) private-value: the agen't private value for a good (currently there is only 1 good)
+buyers-own [beliefs desire intention money private-value]
+
+; --- Setup buyers ---
+to setup-buyers
+  let num-buyers 5
+  create-buyers num-buyers [
+    setxy 4 + min-pxcor + who * 3 min-pycor + 3
+    set heading 90
+    set color red
+    set shape "person"
+    
+    ; Initial money is random
+    set money (random 100)
+    set label money
+    
+    ; Draw the buyer's private-values from a normal distribution 
+    set private-value (round (random-normal 20 5))
+    
+    set beliefs (list)
+    set desire "minimize-price"
+    set intention false
+  ]
+end
