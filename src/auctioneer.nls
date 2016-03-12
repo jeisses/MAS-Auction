@@ -2,10 +2,9 @@ breed [auctioneers auctioneer]
 
 ; --- Auctioneer variables ---
 ;
-; 1) money: the agent's money
 auctioneers-own [beliefs desire intention]
 
-; --- Setup buyers ---
+; --- Setup auctioneers ---
 to setup-auctioneers  
   let num_auctioneers 1
   create-auctioneers num_auctioneers [
@@ -18,4 +17,27 @@ to setup-auctioneers
     set desire "maximize-price"
     set intention false
   ]
+end
+
+;--- Items to be sold by auctioneer
+to setup-items
+end
+
+; --- Update the auctioneers' beliefs ---
+to update-auctioneers-beliefs
+  ; type of item
+  ; number of items
+  ; prices for each type of item 
+end
+
+; --- Update the auctioneers' desires ---
+to update-auctioneers-desires
+end
+
+;--- Update the auctioneers' intentions ---
+to update-auctioneers-intentions
+end
+
+; --- Execute the auctioneers' actions
+to execute-auctioneers-actions
 end

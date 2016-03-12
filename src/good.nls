@@ -1,0 +1,17 @@
+breed [goods good]
+
+; --- A good's own variables ---
+goods-own[good-type good-price sold]
+
+to setup-goods
+  create-goods
+  [
+    let all-good-types ['wood'] ;can be expanded
+    
+  ]
+end
+
+; --- Setup the goods ---
+to setup-goods
+  set good-type 
+end
