@@ -1,10 +1,16 @@
+extensions [table]
+
 breed [buyers buyer]
 
 ; --- Buyer variables ---
 ;
-; 1) money: the agent's money
-; 2) private-value: the agen't private value for a good (currently there is only 1 good)
-buyers-own [beliefs desire intention money private-value]
+; 1) beliefs
+; 2) desire
+; 3) intention
+; 4) private-value: the agen't private value for a good (currently there is only 1 good)
+; 5) outgoing-messages
+; 6) incomming-messages
+buyers-own [beliefs desire intention money private-value outgoing-messages incomming-messages]
 
 ; --- Setup buyers ---
 to setup-buyers
@@ -22,8 +28,58 @@ to setup-buyers
     ; Draw the buyer's private-values from a normal distribution 
     set private-value (round (random-normal 20 5))
     
-    set beliefs (list)
+    set beliefs table:make
+    
+    ; Store the initial belifs
+    table:put beliefs "money" money
+    table:put beliefs "value" private-value
+    
     set desire "minimize-price"
     set intention false
   ]
+end
+
+to update-buyer-beliefs
+  ; Look how much money we have left
+  table:put beliefs "money" money
+  
+  foreach incomming-messages [
+    ; Message about what good is being sold. Format is: 
+    ; ["auctioned-good", good-turtle-id, current-bid]
+    ifelse first ? = "auctioned-good" [
+      table:put beliefs "auctioned-good" item 2 ?
+      table:put beliefs "current-bid" item 3 ?
+    ][
+    ;; Auction for the current good is closed 
+    ifelse first ? = "close-auction" [
+      table:remove beliefs "auctioned-good"
+      table:remove beliefs "current-bid"
+    ][]]
+  ]
+end
+
+
+to update-buyer-desires
+  
+end
+
+to update-buyer-intentions
+  ;; See if we want to bid
+  if table:has-key? beliefs "auctioned-good" [
+    bid = (basic-bid-strategie table:get beliefs "auctioned-good")
+  ]
+end
+
+to execute-buyer-actions
+  
+end
+
+;;;;;;;;;;;;;;;;;;;;;
+;; BUYER STRATEGIES
+;;;;;;;;;;;;;;;;;;;;;
+
+to basic-bid-strategie
+   ;; ask goods  [
+   ;;     
+   ;; ]
 end
