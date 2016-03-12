@@ -4,14 +4,18 @@ breed [goods good]
 goods-own[good-type good-price sold]
 
 to setup-goods
-  create-goods
+  let num-goods 10
+  create-goods num-goods
   [
-    let all-good-types ['wood'] ;can be expanded
-    
+    setxy 0 + min-pxcor + who * 1 max-pycor - 1
+    let all-good-types ["wood"] ;can be expanded
+    set good-type item 0 all-good-types
+    if good-type = "wood"
+    [
+      set shape "tree"
+    ]
+    set good-price  1 + random (10)
+    set label good-price
+    set sold false 
   ]
-end
-
-; --- Setup the goods ---
-to setup-goods
-  set good-type 
 end

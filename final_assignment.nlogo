@@ -2,7 +2,7 @@
 ; Lecturers: T. Bosse & M.C.A. Klein
 ; Lab assistants: D. Formolo & L. Medeiros
 
-__includes["src/buyer.nls" "src/auctioneer.nls"]
+__includes["src/buyer.nls" "src/auctioneer.nls" "src/good.nls"]
 
 ; --- Global variables ---
 ; The following global variables are given.
@@ -18,6 +18,7 @@ to setup
   setup-patches
   setup-buyers
   setup-auctioneers
+  setup-goods
   setup-ticks
 end
 
