@@ -56,11 +56,13 @@ end
 ; --- Update intentions ---
 to update-intentions
   update-auctioneers-intentions
+  update-buyer-intentions
 end
 
 ; --- Execute actions ---
 to execute-actions
-  execute-auctioneers-actions
+ execute-auctioneers-actions
+ execute-buyer-actions
 end
 
 ; --- Send messages ---

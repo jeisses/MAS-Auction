@@ -31,7 +31,7 @@ to setup-auctioneers
     
     ;; Setup beliefs table
     ;; The auctioneer starts with beliefs about the available goods
-    table:put beliefs "all goods" all-goods
+    table:put beliefs "all goods" all-goods       ; list of unsold goods
     table:put beliefs "price list" price-list
     table:put beliefs "current good" false
     table:put beliefs "current price" -1
@@ -52,20 +52,29 @@ to update-auctioneers-beliefs
   ask auctioneers [
     ;; If last intention was publish prices, add this to beliefs
     if intention = "publish pricelist" [ table:put beliefs "published pricelist" true ]
+
+    ;; Update beliefs about the good being auctioned
+    if table:get beliefs "current good" = false and length table:get beliefs "all goods" > 0 [
+      let cur-good false
+      ask goods-at -1 0 [ set cur-good who ]
+      table:put beliefs "current good" cur-good
+    ]
   ] 
 end
 
 ; --- Update the auctioneers' desires ---
 to update-auctioneers-desires
   ask auctioneers [
+    ;; Shutdown if all is sold
+    if length table:get beliefs "all goods" = 0 [ set desire "shutdown" ]
   ]
 end
 
 ; --- Update the auctioneers' intentions ---
 to update-auctioneers-intentions
-  let num-goods count goods with [sold = false]
-  
   ask auctioneers [
+    let num-goods length table:get beliefs "all goods"
+    
     ; If the desire is to auction goods  
     if desire = "maximize price" [
       ; Check if we already published prices
@@ -73,9 +82,13 @@ to update-auctioneers-intentions
         set intention "publish pricelist"
       ][
       ; If there's goods available then prepare them
-      ifelse num-goods > 0 and count (goods-at auction-xcor auction-ycor) = 0 [
+      ifelse num-goods > 0 and count (goods-at -1 0) = 0 [
         set intention "fetch good"
-      ][]]
+      ][
+      ; If there's a good ready we can auction it
+      ifelse is-number? (table:get beliefs "current good") [
+        set intention "auction good"
+      ][]]]
     ]
     
     ; Shutdown is the desire when there are no more goods
@@ -99,7 +112,10 @@ to execute-auctioneers-actions
         set xcor auction-xcor
         set ycor auction-ycor
       ]
-    ][]]]
+    ][
+    ifelse intention = "auction good" [
+      set outgoing-messages (list (list "auction" (table:get beliefs "current good") (table:get beliefs "current price")))
+    ][]]]]
   ]
 end
 
@@ -112,6 +128,6 @@ to send-auctioneers-messages
          set incoming-messages fput ? incoming-messages 
       ])
     ]
-   ;; set outgoing-messages (list)
+   set outgoing-messages (list)
   ]
 end

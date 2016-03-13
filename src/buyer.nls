@@ -74,15 +74,19 @@ to update-buyer-desires
 end
 
 to update-buyer-intentions
-  ;; See if we want to bid
-  if table:has-key? beliefs "auctioned-good" [
-    let bid (basic-bid-strategie (table:get beliefs "auctioned-good") (table:get beliefs "current-bid"))
+  ask buyers [
+    ;; See if we want to bid
+    if table:has-key? beliefs "auctioned-good" [
+      let bid (basic-bid-strategie (table:get beliefs "auctioned-good") (table:get beliefs "current-bid"))
+    ]
   ]
 end
 
 to execute-buyer-actions
   
 end
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; BUYER STRATEGIES
