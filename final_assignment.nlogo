@@ -17,8 +17,8 @@ to setup
   clear-turtles
   setup-patches
   setup-buyers
-  setup-auctioneers
   setup-goods
+  setup-auctioneers
   setup-ticks
 end
 
@@ -26,10 +26,11 @@ end
 ; --- Main processing cycle ---
 to go
   ; This method executes the main processing cycle of an agent.
-  update-desires
   update-beliefs
+  update-desires
   update-intentions
   execute-actions
+  send-messages
   tick
 end
 
@@ -48,28 +49,36 @@ end
 
 ; --- Update desires ---
 to update-desires
-
+  update-auctioneers-desires
 end
 
 
 ; --- Update beliefs ---
 to update-beliefs
+  update-auctioneers-beliefs
 end
 
 
 ; --- Update intentions ---
 to update-intentions
+  update-auctioneers-intentions
 end
 
 ; --- Execute actions ---
 to execute-actions
+  execute-auctioneers-actions
+end
+
+; --- Send messages ---
+to send-messages
+  send-auctioneers-messages
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-410
-17
-915
-402
+743
+11
+1248
+396
 10
 7
 23.6
@@ -93,10 +102,10 @@ ticks
 30.0
 
 BUTTON
-122
-65
-188
-98
+9
+10
+75
+43
 NIL
 Setup
 NIL
@@ -108,6 +117,89 @@ NIL
 NIL
 NIL
 1
+
+BUTTON
+95
+10
+158
+48
+NIL
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+8
+56
+711
+101
+Beliefs of auctioneer
+[beliefs] of auctioneer 15
+17
+1
+11
+
+MONITOR
+9
+113
+398
+158
+Incoming messenges of auctioneer
+[incoming-messages] of auctioneer 5
+17
+1
+11
+
+MONITOR
+413
+116
+712
+161
+outgoing messages of auctioneer
+[outgoing-messages] of auctioneer 15
+17
+1
+11
+
+MONITOR
+10
+168
+154
+213
+Desires of auctioneer
+[desire] of auctioneer 15
+17
+1
+11
+
+MONITOR
+174
+168
+311
+213
+Intention of auctioneer
+[intention] of auctioneer 15
+17
+1
+11
+
+MONITOR
+10
+252
+314
+297
+NIL
+[incoming-messages] of buyer 0
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

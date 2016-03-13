@@ -2,7 +2,7 @@ breed [auctioneers auctioneer]
 
 ; --- Auctioneer variables ---
 ;
-auctioneers-own [beliefs desire intention]
+auctioneers-own [beliefs desire intention incoming-messages outgoing-messages]
 
 ; --- Setup auctioneers ---
 to setup-auctioneers  
@@ -13,31 +13,95 @@ to setup-auctioneers
     set color yellow
     set shape "person business"
     
-    set beliefs (list)
-    set desire "maximize-price"
-    set intention false
+    ;Store initial values of auctioneer
+    set beliefs table:make
+    let all-goods sort-by < [who] of goods
+    let price-list [good-price] of goods
+    let current-good-price 0
+    ask good item 0 all-goods[set current-good-price good-price]
+    
+    table:put beliefs "all goods" all-goods
+    table:put beliefs "price list" price-list
+    table:put beliefs "current good" item 0 all-goods
+    table:put beliefs "current price" current-good-price
+    
+    set outgoing-messages (list)
+    set incoming-messages (list)
+    set intention ["open auction"]
+    set desire ["maximize-price"]
   ]
-end
-
-;--- Items to be sold by auctioneer
-to setup-items
 end
 
 ; --- Update the auctioneers' beliefs ---
 to update-auctioneers-beliefs
   ; type of item
   ; number of items
-  ; prices for each type of item 
+  ; prices for each type of item
+  ask auctioneers
+  [
+    if item 0 intention = "publish pricelist"
+    [
+     set outgoing-messages table:get beliefs "price list" 
+    ]
+  ] 
 end
 
 ; --- Update the auctioneers' desires ---
 to update-auctioneers-desires
+  ask auctioneers
+  [
+  ]
+   
 end
 
 ;--- Update the auctioneers' intentions ---
 to update-auctioneers-intentions
+  ask auctioneers
+  [
+    ifelse item 0 desire = "maximize-price" and item 0 intention = "open auction"
+    [
+      set intention ["publish pricelist"]
+    ]
+    [
+      if item 0 desire = "maximize-price" and item 0 intention = "publish pricelist"
+      [
+        set intention ["send message"]
+      ]
+    ]
+    
+    if item 0 desire = "stop"
+    [
+      set intention "close auction"
+    ]
+  ]
 end
 
 ; --- Execute the auctioneers' actions
 to execute-auctioneers-actions
+  ask auctioneers
+  [
+    if item 0 intention = "close auction"
+    [
+      ;determine winner
+    ]
+  ]
+end
+
+;--- Send messages ---
+to send-auctioneers-messages
+  ask auctioneers
+  [
+    if item 0 intention = "send message"
+    [
+      let msgs outgoing-messages
+      ask buyers
+      [
+        (foreach msgs
+          [
+           set incoming-messages fput ? incoming-messages 
+          ])
+      ]
+      set outgoing-messages (list)
+    ]
+  ]
 end

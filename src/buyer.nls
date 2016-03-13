@@ -10,7 +10,7 @@ breed [buyers buyer]
 ; 4) private-value: the agen't private value for a good (currently there is only 1 good)
 ; 5) outgoing-messages
 ; 6) incomming-messages
-buyers-own [beliefs desire intention money private-value outgoing-messages incomming-messages]
+buyers-own [beliefs desire intention money private-value outgoing-messages incoming-messages]
 
 ; --- Setup buyers ---
 to setup-buyers
@@ -36,6 +36,7 @@ to setup-buyers
     
     set desire "minimize-price"
     set intention false
+    set incoming-messages (list)
   ]
 end
 
@@ -43,7 +44,7 @@ to update-buyer-beliefs
   ; Look how much money we have left
   table:put beliefs "money" money
   
-  foreach incomming-messages [
+  foreach incoming-messages [
     ; Message about what good is being sold. Format is: 
     ; ["auctioned-good", good-turtle-id, current-bid]
     ifelse first ? = "auctioned-good" [
