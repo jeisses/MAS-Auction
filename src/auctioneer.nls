@@ -114,6 +114,9 @@ to execute-auctioneers-actions
       ]
     ][
     ifelse intention = "auction good" [
+      let current-good-price 0
+      ask goods-at -1 0 [set current-good-price good-price]
+      table:put beliefs "current price" current-good-price
       set outgoing-messages (list (list "auction" (table:get beliefs "current good") (table:get beliefs "current price")))
     ][]]]]
   ]
