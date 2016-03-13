@@ -41,21 +41,30 @@ to setup-buyers
 end
 
 to update-buyer-beliefs
-  ; Look how much money we have left
-  table:put beliefs "money" money
+  ask buyers [
+    ;; Look how much money we have left
+    table:put beliefs "money" money
   
-  foreach incoming-messages [
-    ; Message about what good is being sold. Format is: 
-    ; ["auctioned-good", good-turtle-id, current-bid]
-    ifelse first ? = "auctioned-good" [
-      table:put beliefs "auctioned-good" item 2 ?
-      table:put beliefs "current-bid" item 3 ?
-    ][
-    ;; Auction for the current good is closed 
-    ifelse first ? = "close-auction" [
-      table:remove beliefs "auctioned-good"
-      table:remove beliefs "current-bid"
-    ][]]
+    foreach incoming-messages [
+      ;; Message with base prices of all goods. Format is:
+      ;; ["price list" [p1 p2 p3 ...]
+      ifelse first ? = "price list" [
+        table:put beliefs "price list" item 1 ?
+      ][
+      ;; Message about what good is being sold. Format is: 
+      ;; ["auction" good-turtle-id current-bid]
+      ifelse first ? = "auction" [
+        table:put beliefs "auctioned-good" item 1 ?
+        table:put beliefs "current-bid" item 2 ?
+      ][
+      ;; Auction for the current good is closed 
+      ifelse first ? = "close auction" [
+        table:remove beliefs "auctioned-good"
+        table:remove beliefs "current-bid"
+      ][]]]
+    ]
+    
+    set incoming-messages (list)
   ]
 end
 
@@ -67,7 +76,7 @@ end
 to update-buyer-intentions
   ;; See if we want to bid
   if table:has-key? beliefs "auctioned-good" [
-    ;bid = (basic-bid-strategie table:get beliefs "auctioned-good")
+    let bid (basic-bid-strategie (table:get beliefs "auctioned-good") (table:get beliefs "current-bid"))
   ]
 end
 
@@ -79,8 +88,11 @@ end
 ;; BUYER STRATEGIES
 ;;;;;;;;;;;;;;;;;;;;;
 
-to basic-bid-strategie
-   ;; ask goods  [
-   ;;     
-   ;; ]
+; --- Basic bidding strategy ---
+;
+; Place bid if private-value is higher than current-bid
+to-report basic-bid-strategie [good-id current-bid]
+  if private-value > current-bid [
+    report current-bid + 5
+  ]
 end

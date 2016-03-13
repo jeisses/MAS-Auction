@@ -4,31 +4,43 @@ breed [auctioneers auctioneer]
 ;
 auctioneers-own [beliefs desire intention incoming-messages outgoing-messages]
 
+; --- Global variables ---
+; * Position of patch where auctioned good recides
+globals [auction-xcor auction-ycor]
+
 ; --- Setup auctioneers ---
 to setup-auctioneers  
-  let num_auctioneers 1
-  create-auctioneers num_auctioneers [
+  let num-auctioneers 1
+  create-auctioneers num-auctioneers [
     setxy 0 max-pycor - 3
     set heading 180
     set color yellow
     set shape "person business"
     
-    ;Store initial values of auctioneer
+    ;; Setup the patch where the auctioned good is
+    set auction-xcor xcor - 1
+    set auction-ycor ycor
+    ask patch auction-xcor auction-ycor [ set pcolor gray ]
+    
+    ;; Store initial values of auctioneer
     set beliefs table:make
     let all-goods sort-by < [who] of goods
     let price-list [good-price] of goods
     let current-good-price 0
-    ask good item 0 all-goods[set current-good-price good-price]
+    ask good item 0 all-goods [set current-good-price good-price]
     
+    ;; Setup beliefs table
+    ;; The auctioneer starts with beliefs about the available goods
     table:put beliefs "all goods" all-goods
     table:put beliefs "price list" price-list
-    table:put beliefs "current good" item 0 all-goods
-    table:put beliefs "current price" current-good-price
+    table:put beliefs "current good" false
+    table:put beliefs "current price" -1
+    table:put beliefs "published pricelist" false ; remember if we already published prices
     
     set outgoing-messages (list)
     set incoming-messages (list)
-    set intention ["open auction"]
-    set desire ["maximize-price"]
+    set intention ""
+    set desire "maximize price"
   ]
 end
 
@@ -37,40 +49,37 @@ to update-auctioneers-beliefs
   ; type of item
   ; number of items
   ; prices for each type of item
-  ask auctioneers
-  [
-    if item 0 intention = "publish pricelist"
-    [
-     set outgoing-messages table:get beliefs "price list" 
-    ]
+  ask auctioneers [
+    ;; If last intention was publish prices, add this to beliefs
+    if intention = "publish pricelist" [ table:put beliefs "published pricelist" true ]
   ] 
 end
 
 ; --- Update the auctioneers' desires ---
 to update-auctioneers-desires
-  ask auctioneers
-  [
+  ask auctioneers [
   ]
-   
 end
 
-;--- Update the auctioneers' intentions ---
+; --- Update the auctioneers' intentions ---
 to update-auctioneers-intentions
-  ask auctioneers
-  [
-    ifelse item 0 desire = "maximize-price" and item 0 intention = "open auction"
-    [
-      set intention ["publish pricelist"]
-    ]
-    [
-      if item 0 desire = "maximize-price" and item 0 intention = "publish pricelist"
-      [
-        set intention ["send message"]
-      ]
+  let num-goods count goods with [sold = false]
+  
+  ask auctioneers [
+    ; If the desire is to auction goods  
+    if desire = "maximize price" [
+      ; Check if we already published prices
+      ifelse table:get beliefs "published pricelist" = false [
+        set intention "publish pricelist"
+      ][
+      ; If there's goods available then prepare them
+      ifelse num-goods > 0 and count (goods-at auction-xcor auction-ycor) = 0 [
+        set intention "fetch good"
+      ][]]
     ]
     
-    if item 0 desire = "stop"
-    [
+    ; Shutdown is the desire when there are no more goods
+    if desire = "shutdown" [
       set intention "close auction"
     ]
   ]
@@ -78,30 +87,31 @@ end
 
 ; --- Execute the auctioneers' actions
 to execute-auctioneers-actions
-  ask auctioneers
-  [
-    if item 0 intention = "close auction"
-    [
-      ;determine winner
-    ]
+  ask auctioneers [
+    ifelse intention = "close auction" [
+       print "Closing auction"
+    ][
+    ifelse intention = "publish pricelist" [
+      set outgoing-messages (list (list  "price list" (table:get beliefs "price list")))
+    ][
+    ifelse intention = "fetch good" [
+      ask one-of goods with [sold = false] [
+        set xcor auction-xcor
+        set ycor auction-ycor
+      ]
+    ][]]]
   ]
 end
 
 ;--- Send messages ---
 to send-auctioneers-messages
-  ask auctioneers
-  [
-    if item 0 intention = "send message"
-    [
-      let msgs outgoing-messages
-      ask buyers
-      [
-        (foreach msgs
-          [
-           set incoming-messages fput ? incoming-messages 
-          ])
-      ]
-      set outgoing-messages (list)
+  ask auctioneers [
+    let msgs outgoing-messages
+    ask buyers [
+      (foreach msgs [
+         set incoming-messages fput ? incoming-messages 
+      ])
     ]
+   ;; set outgoing-messages (list)
   ]
 end

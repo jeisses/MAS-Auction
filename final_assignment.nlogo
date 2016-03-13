@@ -10,7 +10,6 @@ __includes["src/buyer.nls" "src/auctioneer.nls" "src/good.nls"]
 ; 1) ...
 globals [time]
 
-
 ; --- Setup ---
 to setup
   set time 0
@@ -21,7 +20,6 @@ to setup
   setup-auctioneers
   setup-ticks
 end
-
 
 ; --- Main processing cycle ---
 to go
@@ -34,30 +32,26 @@ to go
   tick
 end
 
-
 ; --- Setup patches ---
 to setup-patches
   clear-patches
 end
-
 
 ; --- Setup ticks ---
 to setup-ticks
   reset-ticks
 end
 
-
 ; --- Update desires ---
 to update-desires
   update-auctioneers-desires
 end
 
-
 ; --- Update beliefs ---
 to update-beliefs
   update-auctioneers-beliefs
+  update-buyer-beliefs
 end
-
 
 ; --- Update intentions ---
 to update-intentions
@@ -125,7 +119,7 @@ BUTTON
 48
 NIL
 go
-T
+NIL
 1
 T
 OBSERVER

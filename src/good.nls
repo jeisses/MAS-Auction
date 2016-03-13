@@ -12,10 +12,10 @@ to setup-goods
     set good-type item 0 all-good-types
     if good-type = "wood"
     [
-      set shape "tree"
+      set shape "garbage-can"
+      set color brown
     ]
     set good-price  1 + random (10)
-    set label good-price
     set sold false 
   ]
 end
