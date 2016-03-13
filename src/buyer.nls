@@ -12,7 +12,6 @@ breed [buyers buyer]
 ; 6) incomming-messages
 buyers-own [beliefs desire intention money private-value outgoing-messages incoming-messages]
 
-; --- Setup buyers ---
 to setup-buyers
   let num-buyers 5
   create-buyers num-buyers [
@@ -23,10 +22,10 @@ to setup-buyers
     
     ; Initial money is random
     set money (random 100)
-    set label money
     
     ; Draw the buyer's private-values from a normal distribution 
     set private-value (round (random-normal 20 5))
+    set label private-value
     
     set beliefs table:make
     
@@ -35,8 +34,9 @@ to setup-buyers
     table:put beliefs "value" private-value
     
     set desire "minimize-price"
-    set intention false
+    set intention []
     set incoming-messages (list)
+    set outgoing-messages (list)
   ]
 end
 
@@ -47,21 +47,28 @@ to update-buyer-beliefs
   
     foreach incoming-messages [
       ;; Message with base prices of all goods. Format is:
-      ;; ["price list" [p1 p2 p3 ...]
+      ;; ["price list" [p1 p2 p3 ...]]
       ifelse first ? = "price list" [
         table:put beliefs "price list" item 1 ?
       ][
       ;; Message about what good is being sold. Format is: 
       ;; ["auction" good-turtle-id current-bid]
       ifelse first ? = "auction" [
-        table:put beliefs "auctioned-good" item 1 ?
-        table:put beliefs "current-bid" item 2 ?
+        print ?
+        table:put beliefs "auctioned good" item 1 ?
+        table:put beliefs "current bid" item 2 ?
+      ][
+      ;; Message containing the current highest bid. Format is:
+      ;; ["current bid" buyer-id price]
+      ifelse first ? = "current bid" [
+        table:put beliefs "current buyer" item 1 ?
+        table:put beliefs "current bid" item 2 ?
       ][
       ;; Auction for the current good is closed 
       ifelse first ? = "close auction" [
-        table:remove beliefs "auctioned-good"
-        table:remove beliefs "current-bid"
-      ][]]]
+        table:remove beliefs "auctioned good"
+        table:remove beliefs "current bid"
+      ][]]]]
     ]
     
     set incoming-messages (list)
@@ -70,23 +77,60 @@ end
 
 
 to update-buyer-desires
-  
+  ;; TODO
 end
 
 to update-buyer-intentions
   ask buyers [
-    ;; See if we want to bid
-    if table:has-key? beliefs "auctioned-good" [
-      let bid (basic-bid-strategie (table:get beliefs "auctioned-good") (table:get beliefs "current-bid"))
+    ;; Determine how much we want to bid on the current auction
+    let bid false
+    if table:has-key? beliefs "auctioned good" [
+      if not (table:has-key? beliefs "current buyer") or not ((table:get beliefs "current buyer") = who) [
+        print (table:get beliefs "auctioned good")
+        print (table:get beliefs "current bid")
+        set bid (basic-bid-strategie (table:get beliefs "auctioned good") (table:get beliefs "current bid"))
+      ]
     ]
+    
+    ;; Bidding intentions contains the bid price
+    ifelse is-number? bid [
+      set intention (list "bid" bid)
+    ][
+    ;; Intention to pass the current round
+    ifelse bid = false and (table:has-key? beliefs "auctioned good") [
+      set intention ["pass"]
+    ][]]
   ]
 end
 
 to execute-buyer-actions
-  
+  ask buyers with [not empty? intention] [
+    ;; Bidding action
+    ifelse first intention = "bid" [
+      ;; TODO: support multiple auctioneers
+      print (list "Bidding: " (item 1 intention))
+      let buyer-id who
+      set outgoing-messages fput (list "bid" buyer-id (item 1 intention))  outgoing-messages
+    ][
+    ;; Pass
+    ifelse first intention = "pass" [
+      print (list "Buyer " who " passing")
+    ][]]
+  ]
 end
 
-
+;--- Send messages ---
+to send-buyer-messages
+  ask buyers [
+    let msgs outgoing-messages
+    ask auctioneers [
+      (foreach msgs [
+         set incoming-messages fput ? incoming-messages 
+      ])
+    ]
+   set outgoing-messages (list)
+  ]
+end
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; BUYER STRATEGIES
@@ -94,9 +138,11 @@ end
 
 ; --- Basic bidding strategy ---
 ;
-; Place bid if private-value is higher than current-bid
+; Place bid if private-value is higher than current-bid. Currently alays
+; bids when private value is larger than current-bid. Should be extended.
 to-report basic-bid-strategie [good-id current-bid]
   if private-value > current-bid [
-    report current-bid + 5
+    report current-bid + 1
   ]
+  report false
 end

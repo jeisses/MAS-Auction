@@ -68,6 +68,7 @@ end
 ; --- Send messages ---
 to send-messages
   send-auctioneers-messages
+  send-buyer-messages
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -98,10 +99,10 @@ ticks
 30.0
 
 BUTTON
-9
+15
 10
-75
-43
+81
+48
 NIL
 Setup
 NIL
@@ -143,21 +144,21 @@ Beliefs of auctioneer
 11
 
 MONITOR
-9
-113
-398
-158
+6
+153
+316
+198
 Incoming messenges of auctioneer
-[incoming-messages] of auctioneer 5
+[incoming-messages] of auctioneer 15
 17
 1
 11
 
 MONITOR
-413
-116
-712
-161
+317
+153
+648
+198
 outgoing messages of auctioneer
 [outgoing-messages] of auctioneer 15
 17
@@ -165,10 +166,10 @@ outgoing messages of auctioneer
 11
 
 MONITOR
-10
-168
-154
-213
+7
+199
+151
+244
 Desires of auctioneer
 [desire] of auctioneer 15
 17
@@ -176,10 +177,10 @@ Desires of auctioneer
 11
 
 MONITOR
-174
-168
-311
-213
+153
+199
+290
+244
 Intention of auctioneer
 [intention] of auctioneer 15
 17
@@ -187,12 +188,67 @@ Intention of auctioneer
 11
 
 MONITOR
-10
-252
-314
-297
+9
+264
+313
+309
 NIL
 [incoming-messages] of buyer 0
+17
+1
+11
+
+MONITOR
+314
+264
+649
+309
+NIL
+[outgoing-messages] of buyer 0
+17
+1
+11
+
+MONITOR
+137
+310
+281
+355
+NIL
+[intention] of buyer 0
+17
+1
+11
+
+MONITOR
+9
+310
+136
+355
+NIL
+[desire] of buyer 0
+17
+1
+11
+
+MONITOR
+6
+104
+707
+149
+Current bids (format: [buyer-id money]
+[table:get beliefs \"bids\"] of auctioneer 15
+17
+1
+11
+
+MONITOR
+274
+407
+584
+452
+NIL
+[table:get beliefs \"num bids\"] of auctioneer 15
 17
 1
 11

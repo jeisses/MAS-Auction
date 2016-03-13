@@ -33,9 +33,12 @@ to setup-auctioneers
     ;; The auctioneer starts with beliefs about the available goods
     table:put beliefs "all goods" all-goods       ; list of unsold goods
     table:put beliefs "price list" price-list
-    table:put beliefs "current good" false
+    table:put beliefs "current good" false        
     table:put beliefs "current price" -1
+    table:put beliefs "num bids" 0                ; count number of bids this round
     table:put beliefs "published pricelist" false ; remember if we already published prices
+    table:put beliefs "published bid" true        ; remember if we communicated the highest bid
+    table:put beliefs "bids" (list)
     
     set outgoing-messages (list)
     set incoming-messages (list)
@@ -46,19 +49,34 @@ end
 
 ; --- Update the auctioneers' beliefs ---
 to update-auctioneers-beliefs
-  ; type of item
-  ; number of items
-  ; prices for each type of item
   ask auctioneers [
     ;; If last intention was publish prices, add this to beliefs
     if intention = "publish pricelist" [ table:put beliefs "published pricelist" true ]
+    if intention = "publish bid" [ table:put beliefs "published bid" true ]
 
     ;; Update beliefs about the good being auctioned
     if table:get beliefs "current good" = false and length table:get beliefs "all goods" > 0 [
       let cur-good false
-      ask goods-at -1 0 [ set cur-good who ]
+      let cur-price -1
+      ask goods-at -1 0 [ set cur-good who set cur-price good-price ]
       table:put beliefs "current good" cur-good
+      table:put beliefs "current price" cur-price
     ]
+    
+    table:put beliefs "num bids" 0
+    
+    ;; Parse incomming messages
+    foreach incoming-messages [
+      ;; Bid message. Format is:
+      ;; ["bid" buyer-id price]
+      ifelse first ? = "bid" [
+        table:put beliefs "bids" (fput (list (item 1 ?) (item 2 ?))  (table:get beliefs "bids"))
+        table:put beliefs "published bid" false
+        sort-bids
+        table:put beliefs "num bids" table:get beliefs "num bids" + 1
+      ][]
+      set incoming-messages (list)
+    ]    
   ] 
 end
 
@@ -81,14 +99,22 @@ to update-auctioneers-intentions
       ifelse table:get beliefs "published pricelist" = false [
         set intention "publish pricelist"
       ][
+      ; After receiving bids, publish the highest bid
+      ifelse table:get beliefs "published bid" = false [
+        set intention "publish bid"
+      ][
       ; If there's goods available then prepare them
       ifelse num-goods > 0 and count (goods-at -1 0) = 0 [
         set intention "fetch good"
       ][
+      ; If there are no more bids sell item to highest bidder
+      ifelse not empty? (table:get beliefs "bids") and table:get beliefs "num bids" = 0 [
+        set intention "sell item"
+      ][
       ; If there's a good ready we can auction it
       ifelse is-number? (table:get beliefs "current good") [
         set intention "auction good"
-      ][]]]
+      ][]]]]]
     ]
     
     ; Shutdown is the desire when there are no more goods
@@ -98,7 +124,7 @@ to update-auctioneers-intentions
   ]
 end
 
-; --- Execute the auctioneers' actions
+; --- Execute the auctioneers' actions ---
 to execute-auctioneers-actions
   ask auctioneers [
     ifelse intention = "close auction" [
@@ -106,6 +132,10 @@ to execute-auctioneers-actions
     ][
     ifelse intention = "publish pricelist" [
       set outgoing-messages (list (list  "price list" (table:get beliefs "price list")))
+    ][
+    ifelse intention = "publish bid" [
+      let highest-bid first table:get beliefs "bids"
+      set outgoing-messages (list (list "current bid" first highest-bid (item 1 highest-bid)))
     ][
     ifelse intention = "fetch good" [
       ask one-of goods with [sold = false] [
@@ -115,11 +145,18 @@ to execute-auctioneers-actions
     ][
     ifelse intention = "auction good" [
       set outgoing-messages (list (list "auction" (table:get beliefs "current good") (table:get beliefs "current price")))
-    ][]]]]
+    ][]]]]]
   ]
 end
 
-;--- Send messages ---
+; --- Sort bids ---
+;
+; Helper function. Sort the bids descending by price.
+to sort-bids
+  table:put beliefs "bids" (sort-by [item 1 ?1 > item 1 ?2] (table:get beliefs "bids"))
+end
+
+; --- Send messages ---
 to send-auctioneers-messages
   ask auctioneers [
     let msgs outgoing-messages
@@ -131,3 +168,4 @@ to send-auctioneers-messages
    set outgoing-messages (list)
   ]
 end
+
