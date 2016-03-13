@@ -7,10 +7,10 @@ breed [buyers buyer]
 ; 1) beliefs
 ; 2) desire
 ; 3) intention
-; 4) private-value: the agen't private value for a good (currently there is only 1 good)
+; 4) wish-list: contains good, valuation and quantity (nr of goods needed)
 ; 5) outgoing-messages
 ; 6) incomming-messages
-buyers-own [beliefs desire intention money private-value outgoing-messages incoming-messages]
+buyers-own [beliefs desire intention money wishlist pricelist current-bids]
 
 ; --- Setup buyers ---
 to setup-buyers
@@ -24,63 +24,97 @@ to setup-buyers
     ; Initial money is random
     set money (random 100)
     set label money
-    
-    ; Draw the buyer's private-values from a normal distribution 
-    set private-value (round (random-normal 20 5))
-    
-    set beliefs table:make
+
+		set current-bids table:make
+		let products table:make
+		ask goods [ table:put products good-type 0
+		show good-type]
+    set current-bids products
+		show current-bids
+
+		set beliefs table:make
+		set wishlist table:make
+		set pricelist table:make
     
     ; Store the initial belifs
-    table:put beliefs "money" money
-    table:put beliefs "value" private-value
     
-    set desire "minimize-price"
+		
+    ; Draw the buyer's valuation from a normal distribution
+		table:put wishlist "wood" (list  random 5 (round (random-normal 20 5)))
+
+		set desire "minimize price"
     set intention false
-    set incoming-messages (list)
+    
   ]
 end
 
-to update-buyer-beliefs
-  ; Look how much money we have left
-  table:put beliefs "money" money
-  
-  foreach incoming-messages [
-    ; Message about what good is being sold. Format is: 
-    ; ["auctioned-good", good-turtle-id, current-bid]
-    ifelse first ? = "auctioned-good" [
-      table:put beliefs "auctioned-good" item 2 ?
-      table:put beliefs "current-bid" item 3 ?
-    ][
-    ;; Auction for the current good is closed 
-    ifelse first ? = "close-auction" [
-      table:remove beliefs "auctioned-good"
-      table:remove beliefs "current-bid"
-    ][]]
-  ]
+to update-buyers-beliefs
+	; updated implicitly with "publish pricelist" and "bid"
 end
 
 
-to update-buyer-desires
-  
+to update-buyers-desires
+	let wishes table:keys wishlist
+	set desire "stop, have everything"
+	foreach wishes [
+		let vq-list table:get wishlist ?
+		if item 0 vq-list > 1
+		[
+			set desire "minimize price"
+		]
+	]		 
 end
 
-to update-buyer-intentions
+to update-buyers-intentions
   ;; See if we want to bid
-  if table:has-key? beliefs "auctioned-good" [
+	let wanted mostwanted
+  if table:has-key? pricelist wanted [
+		 set intention wanted
     ;bid = (basic-bid-strategie table:get beliefs "auctioned-good")
   ]
 end
 
-to execute-buyer-actions
-  
+to execute-buyers-actions
+  if table:has-key? pricelist intention [
+		let bid basic-bid-strategy intention
+		place-bid bid
+	] 
+end
+
+to place-bid [ bid ]
+	show who
+	show bid
+	let product item 0 bid
+	let price item 1 bid
+	ask buyers [
+		let pbids table:get current-bids product
+		table:put current-bids product fput price pbids
+	]
+	ask auctioneers [
+		let cbids table:get product bids
+		table:put bids product (list who price)
+	]
+end
+
+to-report mostwanted
+	let wanted table:keys wishlist
+	let max-valuation 0
+	let wantsmost ""
+	foreach wanted [
+		let vq-list table:get wishlist ?
+		if item 1 vq-list > max-valuation
+		[
+			set wantsmost ?
+			set max-valuation item 1 vq-list
+		]
+	]
+	report wantsmost
 end
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;; BUYER STRATEGIES
 ;;;;;;;;;;;;;;;;;;;;;
 
-to basic-bid-strategie
-   ;; ask goods  [
-   ;;     
-   ;; ]
+to-report basic-bid-strategy [ product ]
+	 report (list product item 0 table:get wishlist product)
 end

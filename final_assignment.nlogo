@@ -8,7 +8,7 @@ __includes["src/buyer.nls" "src/auctioneer.nls" "src/good.nls"]
 ; The following global variables are given.
 ;
 ; 1) ...
-globals [time]
+globals [time all-goods]
 
 
 ; --- Setup ---
@@ -49,29 +49,33 @@ end
 
 ; --- Update desires ---
 to update-desires
-  update-auctioneers-desires
+  ask auctioneers [ update-auctioneers-desires ]
+  ask buyers [ update-buyers-desires ]
 end
 
 
 ; --- Update beliefs ---
 to update-beliefs
-  update-auctioneers-beliefs
+  ask auctioneers [ update-auctioneers-beliefs ]
+  ask buyers [ update-buyers-beliefs ]
 end
 
 
 ; --- Update intentions ---
 to update-intentions
-  update-auctioneers-intentions
+  ask auctioneers [ update-auctioneers-intentions ]
+  ask buyers [ update-buyers-intentions ]
 end
 
 ; --- Execute actions ---
 to execute-actions
-  execute-auctioneers-actions
+  ask auctioneers [ execute-auctioneers-actions ]
+  ask buyers [ execute-buyers-actions ]
 end
 
 ; --- Send messages ---
 to send-messages
-  send-auctioneers-messages
+  ;ask auctioneers [ send-auctioneers-messages ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -151,8 +155,8 @@ MONITOR
 113
 398
 158
-Incoming messenges of auctioneer
-[incoming-messages] of auctioneer 5
+bids of auctioneer
+[bids] of auctioneer 6
 17
 1
 11
@@ -163,7 +167,7 @@ MONITOR
 712
 161
 outgoing messages of auctioneer
-[outgoing-messages] of auctioneer 15
+[pricelist] of auctioneer 6
 17
 1
 11
@@ -195,11 +199,28 @@ MONITOR
 252
 314
 297
-NIL
-[incoming-messages] of buyer 0
+wishlist of buyer 0
+[wishlist] of buyer 0
 17
 1
 11
+
+BUTTON
+201
+27
+264
+60
+NIL
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -609,7 +630,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
