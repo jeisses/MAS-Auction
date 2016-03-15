@@ -80,7 +80,6 @@ to update-buyer-beliefs
 			;; ["deal" buyer_id price good_id auctioneer_id]
 			ifelse first ? = "deal" and item 1 ? = who [
 				table:put beliefs "money" (table:get beliefs "money" - item 2 ?)
-				write "buying"
 				let gtype ""
 				ask good item 3 ? [ set gtype good-type ] 
 				table:put wishlist gtype (table:get wishlist gtype - 1)
@@ -94,7 +93,11 @@ end
 
 
 to update-buyer-desires
-  ;; TODO
+	ask buyers [
+		let done  true
+		foreach table:keys wishlist [ if table:get wishlist ? > 0 [ set done false ]]
+		if done [ set desire "shutdown" ]
+	]
 end
 
 to update-buyer-intentions
@@ -102,7 +105,10 @@ to update-buyer-intentions
     ;; Determine how much we want to bid on the current auction
     let bid false
     if table:has-key? beliefs "auctioned good" [
-      if not (table:has-key? beliefs "current buyer") or not ((table:get beliefs "current buyer") = who) [
+			let goodtype ""
+			ask good table:get beliefs "auctioned good" [ set goodtype good-type]
+      if not (table:has-key? beliefs "current buyer") or not ((table:get beliefs "current buyer") = who)
+				 		 	and table:get wishlist goodtype > 0 [
         ;;print (table:get beliefs "auctioned good")
         ;;print (table:get beliefs "current bid")
         set bid (basic-bid-strategie (table:get beliefs "auctioned good") (table:get beliefs "current bid"))
@@ -135,11 +141,12 @@ to execute-buyer-actions
     ][
     ;; Pass
     ifelse first intention = "pass" [
-      print (list "Buyer " who " passing")
+      ;;print (list "Buyer " who " passing")
     ][
 		ifelse first intention = "store good" [
 			let xc xcor
 			let yc ycor
+			
 			ask good item 1 intention [ setxy xc yc - 2 ]
 			;; message to selling auctioneer ["deal" auctioneer_id good_id price ]
 			set outgoing-messages fput (list "deal" item 2 intention item 1 intention item 3 intention) outgoing-messages

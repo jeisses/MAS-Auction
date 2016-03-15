@@ -172,7 +172,6 @@ to execute-auctioneers-actions
 			let good_id table:get beliefs "current good"
 			table:put beliefs "money" table:get beliefs "money" + price 
 			set outgoing-messages (list (list "deal" buyer_id price good_id who))
-			print outgoing-messages
 		][]]]]]]
   ]
 end
