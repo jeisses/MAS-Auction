@@ -39,7 +39,8 @@ to setup-auctioneers
     table:put beliefs "published pricelist" false ; remember if we already published prices
     table:put beliefs "published bid" true        ; remember if we communicated the highest bid
     table:put beliefs "bids" (list)
-    
+		table:put beliefs "money" 0
+
     set outgoing-messages (list)
     set incoming-messages (list)
     set intention ""
@@ -74,7 +75,22 @@ to update-auctioneers-beliefs
         table:put beliefs "published bid" false
         sort-bids
         table:put beliefs "num bids" table:get beliefs "num bids" + 1
-      ][]
+      ][
+			;; message to selling auctioneer ["deal" auctioneer_id good_id price ]			;; 
+			ifelse first ? = "deal" and item 1 ? = who [
+				table:put beliefs "all goods" remove item 2 ? table:get beliefs "all goods"
+				ask good item 2 ? [ set sold true ]
+				let prices (list)
+				ask goods [ if not sold [set prices fput good-price prices]]
+				table:put beliefs "price list" prices
+    		table:put beliefs "current good" false        
+    		table:put beliefs "current price" -1
+    		table:put beliefs "num bids" 0                
+    		table:put beliefs "published pricelist" false 
+    		table:put beliefs "published bid" true        
+    		table:put beliefs "bids" (list)
+
+			][]]
       set incoming-messages (list)
     ]    
   ] 
@@ -148,7 +164,16 @@ to execute-auctioneers-actions
       ask goods-at -1 0 [set current-good-price good-price]
       table:put beliefs "current price" current-good-price
       set outgoing-messages (list (list "auction" (table:get beliefs "current good") (table:get beliefs "current price")))
-    ][]]]]]
+    ][
+		ifelse intention = "sell item" [
+			let highest first table:get beliefs "bids"
+			let buyer_id item 0 highest
+			let price item 1 highest
+			let good_id table:get beliefs "current good"
+			table:put beliefs "money" table:get beliefs "money" + price 
+			set outgoing-messages (list (list "deal" buyer_id price good_id who))
+			print outgoing-messages
+		][]]]]]]
   ]
 end
 
@@ -168,7 +193,6 @@ to send-auctioneers-messages
          set incoming-messages fput ? incoming-messages 
       ])
     ]
-   set outgoing-messages (list)
+		set outgoing-messages (list)
   ]
 end
-

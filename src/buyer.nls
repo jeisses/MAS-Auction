@@ -10,7 +10,7 @@ breed [buyers buyer]
 ; 4) private-value: the agen't private value for a good (currently there is only 1 good)
 ; 5) outgoing-messages
 ; 6) incomming-messages
-buyers-own [beliefs desire intention money private-value outgoing-messages incoming-messages]
+buyers-own [beliefs desire intention money private-value outgoing-messages incoming-messages wishlist]
 
 to setup-buyers
   let num-buyers 5
@@ -26,17 +26,24 @@ to setup-buyers
     ; Draw the buyer's private-values from a normal distribution 
     set private-value (round (random-normal 20 5))
     set label private-value
-    
-    set beliefs table:make
+
+		set wishlist table:make
+		table:put wishlist "wood" random 3 + 1
+
+		set beliefs table:make
     
     ; Store the initial belifs
     table:put beliefs "money" money
     table:put beliefs "value" private-value
-    
+		table:put beliefs "wishlist" wishlist
+		table:put beliefs "bought good" false
+
     set desire "minimize-price"
     set intention []
     set incoming-messages (list)
     set outgoing-messages (list)
+
+		
   ]
 end
 
@@ -54,7 +61,7 @@ to update-buyer-beliefs
       ;; Message about what good is being sold. Format is: 
       ;; ["auction" good-turtle-id current-bid]
       ifelse first ? = "auction" [
-        print ?
+        ;; print ?
         table:put beliefs "auctioned good" item 1 ?
         table:put beliefs "current bid" item 2 ?
       ][
@@ -68,7 +75,17 @@ to update-buyer-beliefs
       ifelse first ? = "close auction" [
         table:remove beliefs "auctioned good"
         table:remove beliefs "current bid"
-      ][]]]]
+      ][
+			;; Message announcing sale
+			;; ["deal" buyer_id price good_id auctioneer_id]
+			ifelse first ? = "deal" and item 1 ? = who [
+				table:put beliefs "money" (table:get beliefs "money" - item 2 ?)
+				write "buying"
+				let gtype ""
+				ask good item 3 ? [ set gtype good-type ] 
+				table:put wishlist gtype (table:get wishlist gtype - 1)
+				table:put beliefs "bought good" (list item 3 ? item 4 ? item 2 ?)
+			][]]]]]
     ]
     
     set incoming-messages (list)
@@ -86,12 +103,16 @@ to update-buyer-intentions
     let bid false
     if table:has-key? beliefs "auctioned good" [
       if not (table:has-key? beliefs "current buyer") or not ((table:get beliefs "current buyer") = who) [
-        print (table:get beliefs "auctioned good")
-        print (table:get beliefs "current bid")
+        ;;print (table:get beliefs "auctioned good")
+        ;;print (table:get beliefs "current bid")
         set bid (basic-bid-strategie (table:get beliefs "auctioned good") (table:get beliefs "current bid"))
       ]
     ]
-    
+
+		ifelse is-list? table:get beliefs "bought good" [
+			set intention  fput "store good" table:get beliefs "bought good"
+			table:put beliefs "bought good" false
+		][
     ;; Bidding intentions contains the bid price
     ifelse is-number? bid [
       set intention (list "bid" bid)
@@ -99,7 +120,7 @@ to update-buyer-intentions
     ;; Intention to pass the current round
     ifelse bid = false and (table:has-key? beliefs "auctioned good") [
       set intention ["pass"]
-    ][]]
+    ][]]]
   ]
 end
 
@@ -108,14 +129,21 @@ to execute-buyer-actions
     ;; Bidding action
     ifelse first intention = "bid" [
       ;; TODO: support multiple auctioneers
-      print (list "Bidding: " (item 1 intention))
+      ;;print (list "Bidding: " (item 1 intention))
       let buyer-id who
       set outgoing-messages fput (list "bid" buyer-id (item 1 intention))  outgoing-messages
     ][
     ;; Pass
     ifelse first intention = "pass" [
       print (list "Buyer " who " passing")
-    ][]]
+    ][
+		ifelse first intention = "store good" [
+			let xc xcor
+			let yc ycor
+			ask good item 1 intention [ setxy xc yc - 2 ]
+			;; message to selling auctioneer ["deal" auctioneer_id good_id price ]
+			set outgoing-messages fput (list "deal" item 2 intention item 1 intention item 3 intention) outgoing-messages
+		][]]]
   ]
 end
 
