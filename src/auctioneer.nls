@@ -36,6 +36,7 @@ to setup-auctioneers
     table:put beliefs "current good" false        
     table:put beliefs "current price" -1
     table:put beliefs "num bids" 0                ; count number of bids this round
+    table:put beliefs "num passes" 0              ; count number of passes this round
     table:put beliefs "published pricelist" false ; remember if we already published prices
     table:put beliefs "published bid" true        ; remember if we communicated the highest bid
     table:put beliefs "bids" (list)
@@ -54,6 +55,12 @@ to update-auctioneers-beliefs
     ;; If last intention was publish prices, add this to beliefs
     if intention = "publish pricelist" [ table:put beliefs "published pricelist" true ]
     if intention = "publish bid" [ table:put beliefs "published bid" true ]
+    
+    ;; Last intention was to remove a good
+    if intention = "remove good" [
+      table:put beliefs "current good" false
+      table:put beliefs "current price" -1
+    ]
 
     ;; Update beliefs about the good being auctioned
     if table:get beliefs "current good" = false and length table:get beliefs "all goods" > 0 [
@@ -65,6 +72,7 @@ to update-auctioneers-beliefs
     ]
     
     table:put beliefs "num bids" 0
+    table:put beliefs "num passes" 0
     
     ;; Parse incomming messages
     foreach incoming-messages [
@@ -75,6 +83,10 @@ to update-auctioneers-beliefs
         table:put beliefs "published bid" false
         sort-bids
         table:put beliefs "num bids" table:get beliefs "num bids" + 1
+      ][
+      ;; keep track of number of passes
+      ifelse first ? = "pass" [
+        table:put beliefs "num passes" table:get beliefs "num passes" + 1
       ][
 			;; message to selling auctioneer ["deal" auctioneer_id good_id price ]			;; 
 			ifelse first ? = "deal" and item 1 ? = who [
@@ -89,8 +101,7 @@ to update-auctioneers-beliefs
     		table:put beliefs "published pricelist" false 
     		table:put beliefs "published bid" true        
     		table:put beliefs "bids" (list)
-
-			][]]
+			][]]]
       set incoming-messages (list)
     ]    
   ] 
@@ -127,10 +138,14 @@ to update-auctioneers-intentions
       ifelse not empty? (table:get beliefs "bids") and table:get beliefs "num bids" = 0 [
         set intention "sell item"
       ][
+      ; If there are no bids after auctioning the good, the item should be removed from auction
+      ifelse intention = "auction good" and table:get beliefs "num passes" = 5 [
+        set intention "remove good"
+      ][
       ; If there's a good ready we can auction it
       ifelse is-number? (table:get beliefs "current good") [
         set intention "auction good"
-      ][]]]]]
+      ][]]]]]]
     ]
     
     ; Shutdown is the desire when there are no more goods
@@ -172,7 +187,11 @@ to execute-auctioneers-actions
 			let good_id table:get beliefs "current good"
 			table:put beliefs "money" table:get beliefs "money" + price 
 			set outgoing-messages (list (list "deal" buyer_id price good_id who))
-		][]]]]]]
+		][
+    ifelse intention = "remove good" [
+      ask goods-at -1 0 [ setxy 5 5 set sold true]
+      set outgoing-messages (list (list "close auction"))
+    ][]]]]]]]
   ]
 end
 

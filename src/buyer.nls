@@ -71,11 +71,6 @@ to update-buyer-beliefs
         table:put beliefs "current buyer" item 1 ?
         table:put beliefs "current bid" item 2 ?
       ][
-      ;; Auction for the current good is closed 
-      ifelse first ? = "close auction" [
-        table:remove beliefs "auctioned good"
-        table:remove beliefs "current bid"
-      ][
 			;; Message announcing sale
 			;; ["deal" buyer_id price good_id auctioneer_id]
 			ifelse first ? = "deal" and item 1 ? = who [
@@ -84,7 +79,16 @@ to update-buyer-beliefs
 				ask good item 3 ? [ set gtype good-type ] 
 				table:put wishlist gtype (table:get wishlist gtype - 1)
 				table:put beliefs "bought good" (list item 3 ? item 4 ? item 2 ?)
-			][]]]]]
+        table:remove beliefs "auctioned good"
+        table:remove beliefs "current buyer"
+        table:remove beliefs "current bid"
+			][
+      ;; Auction for the current good is closed 
+      ifelse first ? = "close auction" or first ? = "deal" [
+        table:remove beliefs "auctioned good"
+        table:remove beliefs "current bid"
+        table:remove beliefs "current buyer"
+      ][]]]]]
     ]
     
     set incoming-messages (list)
@@ -106,11 +110,10 @@ to update-buyer-intentions
     let bid false
     if table:has-key? beliefs "auctioned good" [
 			let goodtype ""
-			ask good table:get beliefs "auctioned good" [ set goodtype good-type]
-      if not (table:has-key? beliefs "current buyer") or not ((table:get beliefs "current buyer") = who)
+			ask good table:get beliefs "auctioned good" [ set goodtype good-type ]
+
+      if ((not (table:has-key? beliefs "current buyer")) or not ((table:get beliefs "current buyer") = who))
 				 		 	and table:get wishlist goodtype > 0 [
-        ;;print (table:get beliefs "auctioned good")
-        ;;print (table:get beliefs "current bid")
         set bid (basic-bid-strategie (table:get beliefs "auctioned good") (table:get beliefs "current bid"))
       ]
     ]
@@ -126,7 +129,9 @@ to update-buyer-intentions
     ;; Intention to pass the current round
     ifelse bid = false and (table:has-key? beliefs "auctioned good") [
       set intention ["pass"]
-    ][]]]
+    ][
+    set intention ""
+    ]]]
   ]
 end
 
@@ -141,7 +146,7 @@ to execute-buyer-actions
     ][
     ;; Pass
     ifelse first intention = "pass" [
-      ;;print (list "Buyer " who " passing")
+      set outgoing-messages fput (list "pass") outgoing-messages
     ][
 		ifelse first intention = "store good" [
 			let xc xcor
@@ -176,7 +181,7 @@ end
 ; Place bid if private-value is higher than current-bid. Currently alays
 ; bids when private value is larger than current-bid. Should be extended.
 to-report basic-bid-strategie [good-id current-bid]
-  if private-value > current-bid [
+  if private-value >= current-bid [
     report current-bid + 1
   ]
   report false
