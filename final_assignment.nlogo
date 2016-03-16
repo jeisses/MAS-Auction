@@ -266,8 +266,8 @@ true
 true
 "" ""
 PENS
-"bids" 1.0 0 -16777216 true "" "ifelse length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot (item 1 (first table:get ([beliefs] of auctioneer 15) \"bids\")) \n][]"
-"sold-goods" 1.0 0 -2674135 true "" "ifelse length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot count goods with [sold = true]\n][]"
+"bids" 1.0 0 -16777216 true "" "ifelse count auctioneers > 0 and length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot (item 1 (first table:get ([beliefs] of auctioneer 15) \"bids\")) \n][]"
+"sold-goods" 1.0 0 -2674135 true "" "ifelse count auctioneers > 0 and length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot count goods with [sold = true]\n][]"
 
 @#$#@#$#@
 ## WHAT IS IT?
