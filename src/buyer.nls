@@ -10,7 +10,7 @@ breed [buyers buyer]
 ; 4) private-value: the agen't private value for a good (currently there is only 1 good)
 ; 5) outgoing-messages
 ; 6) incomming-messages
-buyers-own [beliefs desire intention money private-value outgoing-messages incoming-messages wishlist]
+buyers-own [beliefs desire intention private-value outgoing-messages incoming-messages wishlist]
 
 to setup-buyers
   let num-buyers 5
@@ -21,7 +21,7 @@ to setup-buyers
     set shape "person"
     
     ; Initial money is random
-    set money 100 + (random 100)
+    let money 100 + (random 40)
     
     ; Draw the buyer's private-values from a normal distribution 
     set private-value (round (random-normal 50 5))
@@ -39,7 +39,7 @@ to setup-buyers
 		table:put beliefs "bought good" false
 
     set desire "minimize-price"
-    set intention []
+    set intention [""]
     set incoming-messages (list)
     set outgoing-messages (list)
 
@@ -49,9 +49,10 @@ end
 
 to update-buyer-beliefs
   ask buyers [
-    ;; Look how much money we have left
-    table:put beliefs "money" money
-  
+    ;; Set outgoing-messages to an empty list
+    set outgoing-messages (list)
+    
+
     foreach incoming-messages [
       ;; Message with base prices of all goods. Format is:
       ;; ["price list" [p1 p2 p3 ...]]
@@ -74,7 +75,7 @@ to update-buyer-beliefs
 			;; Message announcing sale
 			;; ["deal" buyer_id price good_id auctioneer_id]
 			ifelse first ? = "deal" and item 1 ? = who [
-				table:put beliefs "money" (table:get beliefs "money" - item 2 ?)
+        table:put beliefs "money" table:get beliefs "money" - item 2 ? 
 				let gtype ""
 				ask good item 3 ? [ set gtype good-type ] 
 				table:put wishlist gtype (table:get wishlist gtype - 1)
@@ -89,10 +90,10 @@ to update-buyer-beliefs
         table:remove beliefs "current bid"
         table:remove beliefs "current buyer"
       ][]]]]]
-    ]
-    
-    set incoming-messages (list)
+    ] 
+    set incoming-messages []
   ]
+  
 end
 
 
@@ -127,10 +128,10 @@ to update-buyer-intentions
       set intention (list "bid" bid)
     ][
     ;; Intention to pass the current round
-    ifelse bid = false and (table:has-key? beliefs "auctioned good") [
+    ifelse bid = false and (table:has-key? beliefs "auctioned good") or (table:get beliefs "money") <= 0 [
       set intention ["pass"]
     ][
-    set intention ""
+    set intention [""]
     ]]]
   ]
 end
@@ -155,7 +156,8 @@ to execute-buyer-actions
 			ask good item 1 intention [ setxy xc yc - 2 ]
 			;; message to selling auctioneer ["deal" auctioneer_id good_id price ]
 			set outgoing-messages fput (list "deal" item 2 intention item 1 intention item 3 intention) outgoing-messages
-		][]]]
+		][]]
+    ]
   ]
 end
 
@@ -168,7 +170,6 @@ to send-buyer-messages
          set incoming-messages fput ? incoming-messages 
       ])
     ]
-   set outgoing-messages (list)
   ]
 end
 
@@ -178,22 +179,16 @@ end
 
 ; --- Basic bidding strategy ---
 ;
-; Place bid if private-value is higher than current-bid. Currently alays
+; Place bid if private-value is higher than current-bid. Currently always
 ; bids when private value is larger than current-bid. Should be extended.
 to-report basic-bid-strategie [good-id current-bid]
-  if private-value >= current-bid [
-    report (current-bid + (random-normal 10 5))
-  ]
-  report false
-end
-
-; --- Bid depending on money ---
-;
-; Place bid if private-value is higher than current-bid. Currently alays
-; bids when private value is larger than current-bid. Should be extended.
-to-report money-agent [good-id current-bid]
-  if private-value >= current-bid [
-    report (current-bid + round(money * random-float 0.5) )
+  let goodtype ""
+  ask good good-id [set goodtype good-type]
+  let wishvalue (table:get wishlist goodtype) / 100
+  let money table:get beliefs "money"
+  
+  if money > current-bid[
+    report min (list money (current-bid + wishvalue * money))
   ]
   report false
 end

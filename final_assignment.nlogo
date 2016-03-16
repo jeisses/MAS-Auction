@@ -53,6 +53,7 @@ end
 ; --- Update desires ---
 to update-desires
   update-auctioneers-desires
+  update-buyer-desires
 end
 
 ; --- Update beliefs ---
@@ -130,7 +131,7 @@ BUTTON
 48
 NIL
 go
-T
+NIL
 1
 T
 OBSERVER
@@ -222,7 +223,7 @@ MONITOR
 310
 281
 355
-NIL
+Intention of buyer 0
 [intention] of buyer 0
 17
 1
@@ -233,7 +234,7 @@ MONITOR
 310
 136
 355
-NIL
+Desire of buyer 0
 [desire] of buyer 0
 17
 1
@@ -268,6 +269,45 @@ true
 PENS
 "bids" 1.0 0 -16777216 true "" "ifelse count auctioneers > 0 and length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot (item 1 (first table:get ([beliefs] of auctioneer 15) \"bids\")) \n][]"
 "sold-goods" 1.0 0 -2674135 true "" "ifelse count auctioneers > 0 and length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot count goods with [sold = true]\n][]"
+
+MONITOR
+299
+313
+430
+358
+Money of buyer 0
+[table:get beliefs \"money\"] of buyer 0
+17
+1
+11
+
+BUTTON
+168
+10
+235
+48
+NIL
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+440
+313
+565
+358
+Money of buyer 1
+[table:get beliefs \"money\"] of buyer 1
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

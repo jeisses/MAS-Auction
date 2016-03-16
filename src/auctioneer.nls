@@ -52,6 +52,9 @@ end
 ; --- Update the auctioneers' beliefs ---
 to update-auctioneers-beliefs
   ask auctioneers [
+    ;; Set outgoing-messages to an empty list
+    set outgoing-messages (list)
+    
     ;; If last intention was publish prices, add this to beliefs
     if intention = "publish pricelist" [ table:put beliefs "published pricelist" true ]
     if intention = "publish bid" [ table:put beliefs "published bid" true ]
@@ -62,6 +65,21 @@ to update-auctioneers-beliefs
       table:put beliefs "current good" false
       table:put beliefs "current price" -1
     ] 
+    
+    if intention = "sell item" [
+      let good-id table:get beliefs "current good"
+      table:put beliefs "all goods" remove (table:get beliefs "current good") (table:get beliefs "all goods")
+      ask good good-id [ set sold true ]
+      let prices (list)
+      ask goods [ if not sold [set prices fput good-price prices]]
+      table:put beliefs "price list" prices
+      table:put beliefs "current good" false        
+      table:put beliefs "current price" -1
+      table:put beliefs "num bids" 0                
+      table:put beliefs "published pricelist" false 
+      table:put beliefs "published bid" true        
+      table:put beliefs "bids" (list)   
+    ]
 
     ;; Update beliefs about the good being auctioned
     if table:get beliefs "current good" = false and length table:get beliefs "all goods" > 0 [
@@ -186,6 +204,7 @@ to execute-auctioneers-actions
 			let price item 1 highest
 			let good_id table:get beliefs "current good"
 			table:put beliefs "money" table:get beliefs "money" + price 
+      show table:get beliefs "money"
 			set outgoing-messages (list (list "deal" buyer_id price good_id who))
 		][
     ifelse intention = "remove good" [
@@ -211,6 +230,5 @@ to send-auctioneers-messages
          set incoming-messages fput ? incoming-messages 
       ])
     ]
-		set outgoing-messages (list)
   ]
 end
