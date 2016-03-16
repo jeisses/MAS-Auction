@@ -269,12 +269,13 @@ true
 PENS
 "bids" 1.0 0 -16777216 true "" "ifelse count auctioneers > 0 and length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot (item 1 (first table:get ([beliefs] of auctioneer 15) \"bids\")) \n][]"
 "sold-goods" 1.0 0 -2674135 true "" "ifelse count auctioneers > 0 and length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot count goods with [sold = true]\n][]"
+"profit" 1.0 0 -11221820 true "" "ifelse count auctioneers > 0 and [beliefs] of auctioneer 15 != 0\n[plot [table:get beliefs \"profit\"] of auctioneer 15][]"
 
 MONITOR
-299
-313
-430
-358
+287
+310
+418
+355
 Money of buyer 0
 [table:get beliefs \"money\"] of buyer 0
 17
@@ -299,12 +300,12 @@ NIL
 1
 
 MONITOR
-440
-313
-565
-358
-Money of buyer 1
-[table:get beliefs \"money\"] of buyer 1
+303
+199
+454
+244
+Profit of auctioneer 15
+[table:get beliefs \"profit\"] of auctioneer 15
 17
 1
 11

@@ -40,7 +40,7 @@ to setup-auctioneers
     table:put beliefs "published pricelist" false ; remember if we already published prices
     table:put beliefs "published bid" true        ; remember if we communicated the highest bid
     table:put beliefs "bids" (list)
-		table:put beliefs "money" 0
+		table:put beliefs "profit" 0                  ; profit of the auctioneer
 
     set outgoing-messages (list)
     set incoming-messages (list)
@@ -203,8 +203,7 @@ to execute-auctioneers-actions
 			let buyer_id item 0 highest
 			let price item 1 highest
 			let good_id table:get beliefs "current good"
-			table:put beliefs "money" table:get beliefs "money" + price 
-      show table:get beliefs "money"
+			table:put beliefs "profit" table:get beliefs "profit" + (price - table:get beliefs "current price") 
 			set outgoing-messages (list (list "deal" buyer_id price good_id who))
 		][
     ifelse intention = "remove good" [
