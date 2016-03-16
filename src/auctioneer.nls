@@ -58,9 +58,10 @@ to update-auctioneers-beliefs
     
     ;; Last intention was to remove a good
     if intention = "remove good" [
+      table:put beliefs "all goods" (remove (table:get beliefs "current good") (table:get beliefs "all goods"))
       table:put beliefs "current good" false
       table:put beliefs "current price" -1
-    ]
+    ] 
 
     ;; Update beliefs about the good being auctioned
     if table:get beliefs "current good" = false and length table:get beliefs "all goods" > 0 [
@@ -159,7 +160,6 @@ end
 to execute-auctioneers-actions
   ask auctioneers [
     ifelse intention = "close auction" [
-       print "Closing auction"
     ][
     ifelse intention = "publish pricelist" [
       set outgoing-messages (list (list  "price list" (table:get beliefs "price list")))

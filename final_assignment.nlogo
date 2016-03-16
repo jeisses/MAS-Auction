@@ -13,6 +13,8 @@ globals [time]
 ; --- Setup ---
 to setup
   set time 0
+  reset-ticks
+  clear-all
   clear-turtles
   setup-patches
   setup-buyers
@@ -29,6 +31,12 @@ to go
   update-intentions
   execute-actions
   send-messages
+
+  ; Exit criteria
+  if count auctioneers with [ desire = "shutdown"] = count auctioneers [
+    stop
+  ]
+
   tick
 end
 
@@ -122,7 +130,7 @@ BUTTON
 48
 NIL
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -242,16 +250,24 @@ Current bids (format: [buyer-id money]
 1
 11
 
-MONITOR
-274
-407
-584
-452
-NIL
-[table:get beliefs \"num bids\"] of auctioneer 15
-17
-1
-11
+PLOT
+10
+377
+517
+618
+Bid price
+Tick
+Price
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"bids" 1.0 0 -16777216 true "" "ifelse length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot (item 1 (first table:get ([beliefs] of auctioneer 15) \"bids\")) \n][]"
+"sold-goods" 1.0 0 -2674135 true "" "ifelse length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot count goods with [sold = true]\n][]"
 
 @#$#@#$#@
 ## WHAT IS IT?

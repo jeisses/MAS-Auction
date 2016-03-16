@@ -21,14 +21,14 @@ to setup-buyers
     set shape "person"
     
     ; Initial money is random
-    set money (random 100)
+    set money 100 + (random 100)
     
     ; Draw the buyer's private-values from a normal distribution 
-    set private-value (round (random-normal 20 5))
+    set private-value (round (random-normal 50 5))
     set label private-value
 
 		set wishlist table:make
-		table:put wishlist "wood" random 3 + 1
+		table:put wishlist "wood" random 3 + 5
 
 		set beliefs table:make
     
@@ -182,7 +182,18 @@ end
 ; bids when private value is larger than current-bid. Should be extended.
 to-report basic-bid-strategie [good-id current-bid]
   if private-value >= current-bid [
-    report current-bid + 1
+    report (current-bid + (random-normal 10 5))
+  ]
+  report false
+end
+
+; --- Bid depending on money ---
+;
+; Place bid if private-value is higher than current-bid. Currently alays
+; bids when private value is larger than current-bid. Should be extended.
+to-report money-agent [good-id current-bid]
+  if private-value >= current-bid [
+    report (current-bid + round(money * random-float 0.5) )
   ]
   report false
 end
