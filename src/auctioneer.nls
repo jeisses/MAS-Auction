@@ -40,8 +40,8 @@ to setup-auctioneers
     table:put beliefs "published pricelist" false ; remember if we already published prices
     table:put beliefs "published bid" true        ; remember if we communicated the highest bid
     table:put beliefs "bids" (list)
-		table:put beliefs "profit" 0                  ; profit of the auctioneer
-
+    table:put beliefs "profit" 0                  ; profit of the auctioneer
+    table:put beliefs "income threshold" (count buyers * 20 + 50)     ; the amount of money the auctioneer wants to yield at least
     set outgoing-messages (list)
     set incoming-messages (list)
     set intention ""
@@ -227,6 +227,11 @@ to send-auctioneers-messages
     ask buyers [
       (foreach msgs [
          set incoming-messages fput ? incoming-messages 
+      ])
+    ]
+    ask fake-buyers[
+      (foreach msgs[
+          set incoming-messages fput ? incoming-messages
       ])
     ]
   ]

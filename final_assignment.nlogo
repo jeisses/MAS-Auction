@@ -2,7 +2,7 @@
 ; Lecturers: T. Bosse & M.C.A. Klein
 ; Lab assistants: D. Formolo & L. Medeiros
 
-__includes["src/buyer.nls" "src/auctioneer.nls" "src/good.nls"]
+__includes["src/buyer.nls" "src/auctioneer.nls" "src/good.nls" "src/fakebuyer.nls"]
 
 ; --- Global variables ---
 ; The following global variables are given.
@@ -12,12 +12,13 @@ globals [time]
 
 ; --- Setup ---
 to setup
+  clear-all
   set time 0
   reset-ticks
-  clear-all
   clear-turtles
   setup-patches
   setup-buyers
+  setup-fake-buyers
   setup-goods
   setup-auctioneers
   setup-ticks
@@ -54,30 +55,35 @@ end
 to update-desires
   update-auctioneers-desires
   update-buyer-desires
+  update-fakebuyers-desires
 end
 
 ; --- Update beliefs ---
 to update-beliefs
   update-auctioneers-beliefs
   update-buyer-beliefs
+  update-fakebuyers-beliefs
 end
 
 ; --- Update intentions ---
 to update-intentions
   update-auctioneers-intentions
   update-buyer-intentions
+  update-fakebuyers-intentions
 end
 
 ; --- Execute actions ---
 to execute-actions
  execute-auctioneers-actions
  execute-buyer-actions
+ execute-fakebuyers-actions
 end
 
 ; --- Send messages ---
 to send-messages
   send-auctioneers-messages
   send-buyer-messages
+  send-fakebuyers-messages
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -267,9 +273,9 @@ true
 true
 "" ""
 PENS
-"bids" 1.0 0 -16777216 true "" "let lb 0\nlet b 0\nask one-of auctioneers\n[\nset lb length (table:get beliefs \"bids\")\nif lb > 0\n[set b item 1 (first table:get beliefs \"bids\")]\n]\n\nifelse count auctioneers > 0 [ \n  plot b \n][]"
-"sold-goods" 1.0 0 -2674135 true "" "let lb 0\nask one-of auctioneers\n[set lb length (table:get beliefs \"bids\")]\n\nifelse count auctioneers > 0 and lb > 0 [ \n  plot count goods with [sold = true]\n][]"
-"profit" 1.0 0 -11221820 true "" "let lb 0\nlet b 0\nask one-of auctioneers\n[set lb length (table:get beliefs \"bids\")\nset b table:get beliefs \"profit\"]\n\nifelse count auctioneers > 0 and lb != 0\n[plot b][]"
+"bids" 1.0 0 -16777216 true "" "let lb 0\nlet b 0\n\nifelse count auctioneers > 0 [ \nask one-of auctioneers\n[\nset lb length (table:get beliefs \"bids\")\nif lb > 0\n[set b item 1 (first table:get beliefs \"bids\")]\n]\n  plot b \n][]"
+"sold-goods" 1.0 0 -2674135 true "" "let lb 0\n\nifelse count auctioneers > 0[\nask one-of auctioneers\n[\nset lb length (table:get beliefs \"bids\")]\nif lb > 0[ \n  plot count goods with [sold = true]]\n][]"
+"profit" 1.0 0 -11221820 true "" "let lb 0\nlet b 0\n\nifelse count auctioneers > 0\n[\nask one-of auctioneers\n[set lb length (table:get beliefs \"bids\")\nset b table:get beliefs \"profit\"]\nif lb != 0[\nplot b]\n][]"
 
 MONITOR
 287
@@ -311,30 +317,74 @@ Profit of auctioneer
 11
 
 SLIDER
-747
-416
-919
-449
+437
+315
+609
+348
 num-buyers
 num-buyers
 2
 5
-5
+2
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-747
-460
-872
-493
-fake-buyer
-fake-buyer
+543
+376
+668
+409
+fakebuyer
+fakebuyer
 0
 1
 -1000
+
+MONITOR
+540
+420
+885
+465
+fake buyer's incoming messages
+[incoming-messages] of one-of fake-buyers
+17
+1
+11
+
+MONITOR
+539
+479
+885
+524
+fake buyer's outgoing messages
+[outgoing-messages] of one-of fake-buyers
+17
+1
+11
+
+MONITOR
+897
+419
+1098
+464
+desire of fake buyer
+[desire] of one-of fake-buyers
+17
+1
+11
+
+MONITOR
+897
+478
+1115
+523
+intention of fake buyer
+[intention] of one-of fake-buyers
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

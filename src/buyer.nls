@@ -118,7 +118,7 @@ to update-buyer-intentions
       ]
     ]
 
-		ifelse is-list? table:get beliefs "bought good" [
+		ifelse is-list? table:get beliefs "bought good"[
 			set intention  fput "store good" table:get beliefs "bought good"
 			table:put beliefs "bought good" false
 		][

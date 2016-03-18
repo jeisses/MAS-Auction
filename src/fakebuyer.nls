@@ -1,1 +1,165 @@
-[breed fake-buyers fake-buyer]
+breed [fake-buyers fake-buyer]
+
+fake-buyers-own [beliefs desire intention outgoing-messages incoming-messages]
+
+to setup-fake-buyers
+  if fakebuyer = true[
+    create-fake-buyers 1[
+      setxy -1 -1
+      set heading 90
+      set color blue
+      set shape "person"
+      
+      ;; set initial beliefs
+      set beliefs table:make
+      table:put beliefs "placed fake bid" false ; check if bidder placed a fake bid
+     
+      ;; set initial desire
+      set desire "maximize bid price"
+     
+      ;; set initial intention
+      set intention [""]
+      
+      ;; set messages to list
+      set incoming-messages (list)
+      set outgoing-messages (list)
+    ]
+  ]
+end
+
+to update-fakebuyers-beliefs
+  ask fake-buyers [
+    ;; Set outgoing-messages to an empty list
+    set outgoing-messages (list)
+    
+    foreach incoming-messages [
+      ;; Message with base prices of all goods. Format is:
+      ;; ["price list" [p1 p2 p3 ...]]
+      ifelse first ? = "price list" [
+        table:put beliefs "price list" item 1 ?
+        
+        ;; TODO: send message from auctioneer to fake buyer about the current profit
+        ;; place fake bids if threshold of auctioneer is not reached (agreed business with auctioneer)
+        let threshold 0
+        let profit 0
+        ask one-of auctioneers [set threshold table:get beliefs "income threshold" set profit table:get beliefs "profit"]
+        ifelse profit < threshold
+        [
+          table:put beliefs "placed fake bid" false
+        ]
+        [
+          table:put beliefs "placed fake bid" true
+        ]
+      ][
+      ;; Message about what good is being sold. Format is: 
+      ;; ["auction" good-turtle-id current-bid]
+      ifelse first ? = "auction" [
+        ;; print ?
+        table:put beliefs "auctioned good" item 1 ?
+        table:put beliefs "current bid" item 2 ?
+      ][
+      ;; Message containing the current highest bid. Format is:
+      ;; ["current bid" buyer-id price]
+      ifelse first ? = "current bid" [
+        table:put beliefs "current buyer" item 1 ?
+        table:put beliefs "current bid" item 2 ?
+      ][
+      ;; Message announcing sale
+      ;; ["deal" buyer_id price good_id auctioneer_id]
+      ifelse first ? = "deal" and item 1 ? = who [
+        table:put beliefs "money" table:get beliefs "money" - item 2 ? 
+        let gtype ""
+        ask good item 3 ? [ set gtype good-type ] 
+        table:put wishlist gtype (table:get wishlist gtype - 1)
+        table:put beliefs "bought good" (list item 3 ? item 4 ? item 2 ?)
+        table:remove beliefs "auctioned good"
+        table:remove beliefs "current buyer"
+        table:remove beliefs "current bid"
+      ][
+      ;; Auction for the current good is closed 
+      ifelse first ? = "close auction" or first ? = "deal" [
+        table:remove beliefs "auctioned good"
+        table:remove beliefs "current bid"
+        table:remove beliefs "current buyer"
+      ][]]]]]
+    ] 
+    set incoming-messages []
+  ]
+end
+
+to update-fakebuyers-desires
+  ask fake-buyers
+  [
+    ifelse table:get beliefs "placed fake bid" = true
+    [set desire "stop"]
+    [set desire "maximize bid price"]
+  ]
+end
+
+to update-fakebuyers-intentions
+  ask fake-buyers
+  [
+    let bid false
+    ifelse desire = "maximize bid price"
+    [
+      if table:has-key? beliefs "auctioned good" 
+      [
+        let goodtype ""
+        ask good table:get beliefs "auctioned good" [ set goodtype good-type ]
+
+        if ((not (table:has-key? beliefs "current buyer")) or not ((table:get beliefs "current buyer") = who))
+        [
+          set bid (bidding-strategie (table:get beliefs "current bid"))
+        ]
+      ]
+      
+      ifelse is-number? bid 
+      [
+        set intention (list "bid" bid)
+      ]
+      [
+        ifelse bid = false and (table:has-key? beliefs "auctioned good")
+        [
+          set intention ["pass"]
+        ]
+        [
+          set intention [""]
+        ]
+      ]
+    ]
+    [
+      set intention "stop"
+    ]
+  ]
+end
+
+to execute-fakebuyers-actions
+  ask fake-buyers with [not empty? intention][
+    if first intention = "bid"
+    [
+      let buyer-id who
+      set outgoing-messages fput (list "bid" buyer-id (item 1 intention)) outgoing-messages
+      table:put beliefs "placed fake bid" true
+    ]
+  ]
+end
+
+to send-fakebuyers-messages
+  ask fake-buyers [
+    let msgs outgoing-messages
+    ask auctioneers [
+      (foreach msgs [
+         set incoming-messages fput ? incoming-messages 
+      ])
+    ]
+  ]
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;FAKE BUYER'S STRATEGIES;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Bidding strategie of fake buyer
+to-report bidding-strategie [current-bid]
+  report round current-bid * 1.8
+end
