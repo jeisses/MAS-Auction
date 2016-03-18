@@ -13,7 +13,6 @@ breed [buyers buyer]
 buyers-own [beliefs desire intention private-value outgoing-messages incoming-messages wishlist]
 
 to setup-buyers
-  let num-buyers 5
   create-buyers num-buyers [
     setxy 4 + min-pxcor + who * 3 min-pycor + 3
     set heading 90

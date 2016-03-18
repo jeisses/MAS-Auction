@@ -158,7 +158,7 @@ to update-auctioneers-intentions
         set intention "sell item"
       ][
       ; If there are no bids after auctioning the good, the item should be removed from auction
-      ifelse intention = "auction good" and table:get beliefs "num passes" = 5 [
+      ifelse intention = "auction good" and table:get beliefs "num passes" = count buyers [
         set intention "remove good"
       ][
       ; If there's a good ready we can auction it

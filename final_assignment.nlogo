@@ -147,7 +147,7 @@ MONITOR
 711
 101
 Beliefs of auctioneer
-[beliefs] of auctioneer 15
+[beliefs] of one-of auctioneers
 17
 1
 11
@@ -158,7 +158,7 @@ MONITOR
 316
 198
 Incoming messenges of auctioneer
-[incoming-messages] of auctioneer 15
+[incoming-messages] of one-of auctioneers
 17
 1
 11
@@ -169,7 +169,7 @@ MONITOR
 648
 198
 outgoing messages of auctioneer
-[outgoing-messages] of auctioneer 15
+[outgoing-messages] of one-of auctioneers
 17
 1
 11
@@ -180,7 +180,7 @@ MONITOR
 151
 244
 Desires of auctioneer
-[desire] of auctioneer 15
+[desire] of one-of auctioneers
 17
 1
 11
@@ -191,7 +191,7 @@ MONITOR
 290
 244
 Intention of auctioneer
-[intention] of auctioneer 15
+[intention] of one-of auctioneers
 17
 1
 11
@@ -246,7 +246,7 @@ MONITOR
 707
 149
 Current bids (format: [buyer-id money]
-[table:get beliefs \"bids\"] of auctioneer 15
+[table:get beliefs \"bids\"] of one-of auctioneers
 17
 1
 11
@@ -267,9 +267,9 @@ true
 true
 "" ""
 PENS
-"bids" 1.0 0 -16777216 true "" "ifelse count auctioneers > 0 and length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot (item 1 (first table:get ([beliefs] of auctioneer 15) \"bids\")) \n][]"
-"sold-goods" 1.0 0 -2674135 true "" "ifelse count auctioneers > 0 and length (table:get ([beliefs] of auctioneer 15) \"bids\") > 0 [ \n  plot count goods with [sold = true]\n][]"
-"profit" 1.0 0 -11221820 true "" "ifelse count auctioneers > 0 and [beliefs] of auctioneer 15 != 0\n[plot [table:get beliefs \"profit\"] of auctioneer 15][]"
+"bids" 1.0 0 -16777216 true "" "let lb 0\nlet b 0\nask one-of auctioneers\n[\nset lb length (table:get beliefs \"bids\")\nif lb > 0\n[set b item 1 (first table:get beliefs \"bids\")]\n]\n\nifelse count auctioneers > 0 [ \n  plot b \n][]"
+"sold-goods" 1.0 0 -2674135 true "" "let lb 0\nask one-of auctioneers\n[set lb length (table:get beliefs \"bids\")]\n\nifelse count auctioneers > 0 and lb > 0 [ \n  plot count goods with [sold = true]\n][]"
+"profit" 1.0 0 -11221820 true "" "let lb 0\nlet b 0\nask one-of auctioneers\n[set lb length (table:get beliefs \"bids\")\nset b table:get beliefs \"profit\"]\n\nifelse count auctioneers > 0 and lb != 0\n[plot b][]"
 
 MONITOR
 287
@@ -304,11 +304,26 @@ MONITOR
 199
 454
 244
-Profit of auctioneer 15
-[table:get beliefs \"profit\"] of auctioneer 15
+Profit of auctioneer
+[table:get beliefs \"profit\"] of one-of auctioneers
 17
 1
 11
+
+SLIDER
+747
+416
+919
+449
+num-buyers
+num-buyers
+2
+5
+3
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
