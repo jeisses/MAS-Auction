@@ -2,7 +2,7 @@
 ; Lecturers: T. Bosse & M.C.A. Klein
 ; Lab assistants: D. Formolo & L. Medeiros
 
-__includes["src/buyer.nls" "src/auctioneer.nls" "src/good.nls" "src/fakebuyer.nls"]
+__includes["src/buyer.nls" "src/auctioneer.nls" "src/good.nls" "src/fakebuyer.nls" "src/textfield.nls"]
 
 ; --- Global variables ---
 ; The following global variables are given.
@@ -39,6 +39,8 @@ to go
   ]
 
   tick
+
+  visualize
 end
 
 ; --- Setup patches ---
@@ -84,6 +86,31 @@ to send-messages
   send-auctioneers-messages
   send-buyer-messages
   send-fakebuyers-messages
+end
+
+
+to visualize
+  ask textfields [ remove-self ]
+
+  ask buyers [
+    if first intention = "bid" [
+      get-a-textfield self round item 1 intention
+    ]
+  ]
+
+  ask fake-buyers [
+    if first intention = "bid" [
+      get-a-textfield self round item 1 intention
+    ]
+
+  ask auctioneers [
+    if intention = "sell item"
+    [
+      get-a-textfield self "sold"
+    ]
+  ]
+
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -325,7 +352,7 @@ num-buyers
 num-buyers
 2
 5
-2
+4
 1
 1
 NIL
@@ -689,6 +716,19 @@ Circle -16777216 true false 30 30 240
 Circle -7500403 true true 60 60 180
 Circle -16777216 true false 90 90 120
 Circle -7500403 true true 120 120 60
+
+text field
+false
+0
+Polygon -7500403 true true 150 150 165 105 195 105 150 150
+Rectangle -7500403 true true 135 45 255 105
+Line -16777216 false 150 150 165 105
+Line -16777216 false 165 105 135 105
+Line -16777216 false 135 45 135 105
+Line -16777216 false 135 45 255 45
+Line -16777216 false 255 45 255 105
+Line -16777216 false 255 105 195 105
+Line -16777216 false 195 105 150 150
 
 tree
 false

@@ -14,7 +14,7 @@ to setup-auctioneers
   create-auctioneers num-auctioneers [
     setxy 0 max-pycor - 3
     set heading 180
-    set color yellow
+    set color green
     set shape "person business"
     
     ;; Setup the patch where the auctioned good is

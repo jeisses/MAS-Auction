@@ -1,0 +1,35 @@
+breed [textfields textfield]
+breed [labels a-label]
+
+
+to get-a-textfield [s text]
+  hatch-textfields 1 [
+    set xcor xcor + .3
+    set ycor ycor + .3
+    set size 4
+    set shape "text field"
+    create-link-from s [ set hidden? true tie]
+    set label ""
+    
+    get-a-label self text size
+  ]
+end
+
+
+to get-a-label [field text scale]
+  hatch-labels 1 [
+    set shape "default"
+    set color [0 0 0 0]
+    set size 1
+    create-link-from field [ set hidden? true tie ]
+    set label text
+    set xcor xcor + 0.14 * scale
+    set ycor ycor + 0.3 * scale
+  ]
+end
+
+
+to remove-self
+  ask out-link-neighbors [ die ]
+  die
+end
