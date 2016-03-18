@@ -319,11 +319,22 @@ num-buyers
 num-buyers
 2
 5
-3
+5
 1
 1
 NIL
 HORIZONTAL
+
+SWITCH
+747
+460
+872
+493
+fake-buyer
+fake-buyer
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
