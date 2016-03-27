@@ -10,7 +10,7 @@ breed [buyers buyer]
 ; 4) private-value: the agen't private value for a good (currently there is only 1 good)
 ; 5) outgoing-messages
 ; 6) incomming-messages
-buyers-own [beliefs desire intention private-value outgoing-messages incoming-messages wishlist auctrs aucs_wi]
+buyers-own [beliefs desire intention private-value outgoing-messages incoming-messages wishlist valuations auctrs aucs_wi]
 
 to setup-buyers
 	 let xcoords [ -8 -6 -4 -2 0 2 4 6 8 ]
@@ -31,14 +31,24 @@ to setup-buyers
 
 		set wishlist table:make
 		table:put wishlist "wood" random 3 + 5
+		table:put wishlist "steel" random 3 + 5
+		table:put wishlist "food" random 3 + 5
+		table:put wishlist "stone" random 3 + 5
+
+		set valuations table:make
+		table:put valuations "wood" random 3 + 5
+		table:put valuations "steel" random 3 + 5
+		table:put valuations "food" random 3 + 5
+		table:put valuations "stone" random 3 + 5
 
 		set beliefs table:make
     
     ; Store the initial belifs
     table:put beliefs "money" money
-    table:put beliefs "value" private-value
+    table:put beliefs "valuations" valuations
 		table:put beliefs "wishlist" wishlist
 		table:put beliefs "bought good" false
+		table:put beliefs "wishes" (list)
 		
     set desire "minimize-price"
     set intention [""]
@@ -58,7 +68,7 @@ to setup-buyers
 		print aucs_wi
 		set auctrs (list)
 		repeat length aucs [ set auctrs fput table:make auctrs ]
-		
+		foreach table:keys aucs_wi [ table:put (item table:get aucs_wi ? auctrs) "id" ? ]
 		]
 end
 
@@ -67,7 +77,8 @@ to update-buyer-beliefs
     ;; Set outgoing-messages to an empty list
     set outgoing-messages (list)
     
-
+		table:put beliefs "wishes" sort-wishes
+		
     foreach incoming-messages [
       ;; Message with base prices of all goods. Format is:
       ;; ["price list" auctioneer_id [p1 p2 p3 ...]]
@@ -123,16 +134,20 @@ end
 to update-buyer-intentions
   ask buyers [
     ;; Determine how much we want to bid on the current auction
+			
     let bid false
-    if table:has-key? beliefs "auctioned good" [
-			let goodtype ""
-			ask good table:get beliefs "auctioned good" [ set goodtype good-type ]
+		let bid_in_auction select-auction
 
-      if ((not (table:has-key? beliefs "current buyer")) or not ((table:get beliefs "current buyer") = who))
-				 		 	and table:get wishlist goodtype > 0 [
-        set bid (basic-bid-strategie (table:get beliefs "auctioned good") (table:get beliefs "current bid"))
-      ]
+		if is-number? bid_in_auction [
+			let auc_table table:get aucs_wi bid_in_auction
+			let goodtype table:get item auc_table auctrs "auctioned good"
+			let currentbid 0
+			if table:has-key? item auc_table auctrs "current bid" [
+				set currentbid table:get item auc_table auctrs "current bid"
+			]
+      set bid (basic-bid-strategie (goodtype) (currentbid))
     ]
+    
 
 		ifelse is-list? table:get beliefs "bought good"[
 			set intention  fput "store good" table:get beliefs "bought good"
@@ -140,7 +155,7 @@ to update-buyer-intentions
 		][
     ;; Bidding intentions contains the bid price
     ifelse is-number? bid [
-      set intention (list "bid" bid)
+      set intention (list "bid" bid_in_auction bid)
     ][
     ;; Intention to pass the current round
     ifelse bid = false and (table:has-key? beliefs "auctioned good") or (table:get beliefs "money") <= 0 [
@@ -158,7 +173,7 @@ to execute-buyer-actions
       ;; TODO: support multiple auctioneers
       ;;print (list "Bidding: " (item 1 intention))
       let buyer-id who
-      set outgoing-messages fput (list "bid" buyer-id (item 1 intention))  outgoing-messages
+      set outgoing-messages fput (list "bid" (item 1 intention) buyer-id (item 2 intention))  outgoing-messages
     ][
     ;; Pass
     ifelse first intention = "pass" [
@@ -196,14 +211,26 @@ end
 ;
 ; Place bid if private-value is higher than current-bid. Currently always
 ; bids when private value is larger than current-bid. Should be extended.
-to-report basic-bid-strategie [good-id current-bid]
-  let goodtype ""
-  ask good good-id [set goodtype good-type]
+to-report basic-bid-strategie [goodtype current-bid]
   let wishvalue (table:get wishlist goodtype) / 100
   let money table:get beliefs "money"
-  
   if money > current-bid[
     report min (list money (current-bid + wishvalue * money))
   ]
   report false
+end
+
+to-report sort-wishes
+	let wishes (list) 
+	foreach table:keys wishlist [ if table:get wishlist ? > 0 [ set wishes fput (list ? table:get valuations ?) wishes ]]
+	set wishes sort-by [ item 1 ?1 > item 1 ?2 ] wishes
+	report wishes
+end
+
+to-report select-auction
+	foreach table:get beliefs "wishes" [
+		let wish item 0 ?
+		foreach auctrs [ if table:has-key? ? "auctioned good" [ if table:get ? "auctioned good" = wish [ report table:get ? "id" ]]]
+	]
+	report false
 end

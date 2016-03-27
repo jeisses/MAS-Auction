@@ -35,7 +35,7 @@ to setup-goods
     ]
 		set amount 5 + random (10)
     set good-price  15 + random (10)
-    set label good-price
+    set label amount
     set sold false 
   ]
 end

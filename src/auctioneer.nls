@@ -20,11 +20,12 @@ to setup-auctioneers
 		set heading 180
     set color green
     set shape "person business"
-    
+		
+
     ;; Store initial values of auctioneer
     set beliefs table:make
     let goods_id who - 5
-		let price [good-price] of goods
+		let price [good-price] of good goods_id
    
     ;; Setup beliefs table
     ;; The auctioneer starts with beliefs about the available goods
@@ -61,7 +62,7 @@ to update-auctioneers-beliefs
     ] 
     
     if intention = "sell item" [
-      table:put beliefs "current price" [good-price] of good table:get beliefs "all-goods"
+      table:put beliefs "current price" [good-price] of good table:get beliefs "goods-id"
       table:put beliefs "num bids" 0                
       table:put beliefs "published pricelist" false 
       table:put beliefs "published bid" true        
