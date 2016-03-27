@@ -58,14 +58,12 @@ to setup-buyers
 		let aucs (list)
 		set aucs_wi table:make
 		ask auctioneers [ set aucs fput who aucs ]
-		print aucs
 		let i 0
 		
 		repeat length aucs [
 			table:put aucs_wi item i aucs i
 			set i i + 1
 		]
-		print aucs_wi
 		set auctrs (list)
 		repeat length aucs [ set auctrs fput table:make auctrs ]
 		foreach table:keys aucs_wi [ table:put (item table:get aucs_wi ? auctrs) "id" ? ]
@@ -90,22 +88,21 @@ to update-buyer-beliefs
       ifelse first ? = "auction" [
         ;; print ?
         table:put item ( table:get aucs_wi item 1 ? ) auctrs "auctioned good" item 2 ?
-        table:put item ( table:get aucs_wi item 1 ? ) auctrs "bid" item 3 ?
+        table:put item ( table:get aucs_wi item 1 ? ) auctrs "current bid" item 3 ?
       ][
       ;; Message containing the current highest bid. Format is:
       ;; ["current bid" auctioneer_id buyer-id price]
       ifelse first ? = "current bid" [
         table:put item ( table:get aucs_wi item 1 ? ) auctrs "current buyer" item 2 ?
-        table:put item ( table:get aucs_wi item 1 ? ) auctrs "bid" item 3 ?
+        table:put item ( table:get aucs_wi item 1 ? ) auctrs "current bid" item 3 ?
       ][
 			;; Message announcing sale
 			;; ["deal" buyer_id price good_id auctioneer_id]
-			ifelse first ? = "deal" and item 1 ? = who [
-        table:put beliefs "money" table:get beliefs "money" - item 2 ? 
-				let gtype ""
-				ask good item 3 ? [ set gtype good-type ] 
+			ifelse first ? = "deal" and item 2 ? = who [
+        table:put beliefs "money" table:get beliefs "money" - item 3 ? 
+				let gtype item 4 ?
 				table:put wishlist gtype (table:get wishlist gtype - 1)
-				table:put beliefs "bought good" (list item 3 ? item 4 ? item 2 ?)
+				table:put beliefs "bought good" (list item 4 ? item 1 ? item 3 ?)
         table:remove item ( table:get aucs_wi item 1 ? ) auctrs  "auctioned good"
         table:remove item ( table:get aucs_wi item 1 ? ) auctrs  "current buyer"
         table:remove item ( table:get aucs_wi item 1 ? ) auctrs  "current bid"
@@ -142,7 +139,7 @@ to update-buyer-intentions
 			let auc_table table:get aucs_wi bid_in_auction
 			let goodtype table:get item auc_table auctrs "auctioned good"
 			let currentbid 0
-			if table:has-key? item auc_table auctrs "current bid" [
+			if table:has-key? item auc_table auctrs "current bid" [ 
 				set currentbid table:get item auc_table auctrs "current bid"
 			]
       set bid (basic-bid-strategie (goodtype) (currentbid))
@@ -183,7 +180,7 @@ to execute-buyer-actions
 			let xc xcor
 			let yc ycor
 			
-			ask good item 1 intention [ setxy xc yc - 2 ]
+			ask patch xc (yc - 2) [ set pcolor white ]
 			;; message to selling auctioneer ["deal" auctioneer_id good_id price ]
 			set outgoing-messages fput (list "deal" item 2 intention item 1 intention item 3 intention) outgoing-messages
 		][]]

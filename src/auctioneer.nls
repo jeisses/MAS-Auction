@@ -83,7 +83,7 @@ to update-auctioneers-beliefs
         table:put beliefs "num bids" table:get beliefs "num bids" + 1
       ][
       ;; keep track of number of passes
-      ifelse first ? = "pass" and item 1 ? = who [
+      ifelse first ? = "pass" [
         table:put beliefs "num passes" table:get beliefs "num passes" + 1
       ][
 			;; message to selling auctioneer ["deal" auctioneer_id good_id price ]			;; 
@@ -156,6 +156,7 @@ to execute-auctioneers-actions
       set outgoing-messages (list (list  "price" who (table:get beliefs "current price")))
     ][
     ifelse intention = "publish bid" [
+			table:put beliefs "published bid" true
       let highest-bid first table:get beliefs "bids"
       set outgoing-messages (list (list "current bid" who first highest-bid (item 1 highest-bid)))
     ][
@@ -169,10 +170,10 @@ to execute-auctioneers-actions
 			let buyer_id item 0 highest
 			let price item 1 highest
 			table:put beliefs "profit" table:get beliefs "profit" + (price - table:get beliefs "current price") 
-			set outgoing-messages (list (list "deal" buyer_id price [good-type] of good table:get beliefs "goods-id" who))
+			set outgoing-messages (list (list "deal" who buyer_id price [good-type] of good table:get beliefs "goods-id" ))
 		][
     ifelse intention = "remove good" [
-      set outgoing-messages (list (list "close auction"))
+      set outgoing-messages (list (list "close auction" who))
     ][]]]]]]
   ]
 end
