@@ -8,9 +8,10 @@ breed [buyers buyer]
 ; 2) desire
 ; 3) intention
 ; 4) private-value: the agen't private value for a good (currently there is only 1 good)
+; x) money: money of the agent
 ; 5) outgoing-messages
 ; 6) incomming-messages
-buyers-own [beliefs desire intention private-value outgoing-messages incoming-messages wishlist]
+buyers-own [beliefs desire intention private-value money outgoing-messages incoming-messages wishlist]
 
 to setup-buyers
   create-buyers num-buyers [
@@ -19,12 +20,12 @@ to setup-buyers
     set color red
     set shape "person"
     
-    ; Initial money is random
-    let money 100 + (random 40)
+    ; Initial money is a setting
+    set money initial-buyer-money
     
     ; Draw the buyer's private-values from a normal distribution 
     set private-value (round (random-normal 50 5))
-    set label private-value
+    set label money
 
 		set wishlist table:make
 		table:put wishlist "wood" random 3 + 5
@@ -41,8 +42,6 @@ to setup-buyers
     set intention [""]
     set incoming-messages (list)
     set outgoing-messages (list)
-
-		
   ]
 end
 
@@ -51,7 +50,6 @@ to update-buyer-beliefs
     ;; Set outgoing-messages to an empty list
     set outgoing-messages (list)
     
-
     foreach incoming-messages [
       ;; Message with base prices of all goods. Format is:
       ;; ["price list" [p1 p2 p3 ...]]
@@ -74,7 +72,9 @@ to update-buyer-beliefs
 			;; Message announcing sale
 			;; ["deal" buyer_id price good_id auctioneer_id]
 			ifelse first ? = "deal" and item 1 ? = who [
-        table:put beliefs "money" table:get beliefs "money" - item 2 ? 
+        set money round (money - item 2 ?)
+        set label money
+        table:put beliefs "money" money 
 				let gtype ""
 				ask good item 3 ? [ set gtype good-type ] 
 				table:put wishlist gtype (table:get wishlist gtype - 1)
@@ -172,6 +172,14 @@ to send-buyer-messages
   ]
 end
 
+;--- Buyer utility function. Call in buyer context. ---
+to-report buyer-utility 
+  let num-goods count goods-at 0 -2
+  let goods-value table:get beliefs "value" * num-goods
+  let num-wish table:get wishlist "wood"
+  report money + goods-value - (num-wish * 30)
+end
+
 ;;;;;;;;;;;;;;;;;;;;;
 ;; BUYER STRATEGIES
 ;;;;;;;;;;;;;;;;;;;;;
@@ -184,10 +192,11 @@ to-report basic-bid-strategie [good-id current-bid]
   let goodtype ""
   ask good good-id [set goodtype good-type]
   let wishvalue (table:get wishlist goodtype) / 100
-  let money table:get beliefs "money"
+  let max-bid table:get beliefs "value" 
+  let bid min (list money (current-bid + wishvalue * money))
   
-  if money > current-bid[
-    report min (list money (current-bid + wishvalue * money))
+  if money > bid and bid <= max-bid and bid > current-bid [
+    report bid
   ]
   report false
 end

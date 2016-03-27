@@ -4,7 +4,7 @@ breed [goods good]
 goods-own[good-type good-price sold]
 
 to setup-goods
-  let num-goods 10
+  let num-goods number-of-goods
   create-goods num-goods
   [
     setxy 0 + min-pxcor + who * 1 max-pycor - 1

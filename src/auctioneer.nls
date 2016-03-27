@@ -204,6 +204,7 @@ to execute-auctioneers-actions
 			let price item 1 highest
 			let good_id table:get beliefs "current good"
 			table:put beliefs "profit" table:get beliefs "profit" + (price - table:get beliefs "current price") 
+
 			set outgoing-messages (list (list "deal" buyer_id price good_id who))
 		][
     ifelse intention = "remove good" [
@@ -218,6 +219,19 @@ end
 ; Helper function. Sort the bids descending by price.
 to sort-bids
   table:put beliefs "bids" (sort-by [item 1 ?1 > item 1 ?2] (table:get beliefs "bids"))
+end
+
+
+;--- Auctioneer utility function. Call in agent context. ---
+;
+; Utility is the profit made + the value of the goods still owned.
+to-report auctioneer-utility
+  let profit (table:get beliefs "profit") 
+  let goods-worth 0
+  ask goods with [sold = false] [
+    set goods-worth goods-worth + good-price
+  ]
+  report goods-worth
 end
 
 ; --- Send messages ---

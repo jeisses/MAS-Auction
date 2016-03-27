@@ -38,6 +38,7 @@ to go
     stop
   ]
 
+;;ask buyers [ print buyer-utility ]
   tick
 
   visualize
@@ -88,6 +89,16 @@ to send-messages
   send-fakebuyers-messages
 end
 
+
+; --- Social Welfare function ---
+;
+; Sum of the utility of all the agents
+to-report social-welfare
+  let sw 0
+  ask auctioneers [ set sw sw + (auctioneer-utility) ]
+  ask buyers [ set sw sw + (buyer-utility) ]
+  report sw
+end
 
 to visualize
   ask textfields [ remove-self ]
@@ -208,10 +219,10 @@ outgoing messages of auctioneer
 11
 
 MONITOR
-7
-199
-151
-244
+6
+197
+150
+242
 Desires of auctioneer
 [desire] of one-of auctioneers
 17
@@ -219,10 +230,10 @@ Desires of auctioneer
 11
 
 MONITOR
-153
-199
-290
-244
+150
+197
+287
+242
 Intention of auctioneer
 [intention] of one-of auctioneers
 17
@@ -230,10 +241,10 @@ Intention of auctioneer
 11
 
 MONITOR
-9
-264
-313
-309
+6
+249
+310
+294
 NIL
 [incoming-messages] of buyer 0
 17
@@ -241,10 +252,10 @@ NIL
 11
 
 MONITOR
-314
-264
-649
-309
+310
+249
+645
+294
 NIL
 [outgoing-messages] of buyer 0
 17
@@ -252,10 +263,10 @@ NIL
 11
 
 MONITOR
-137
-310
-281
-355
+132
+293
+276
+338
 Intention of buyer 0
 [intention] of buyer 0
 17
@@ -263,10 +274,10 @@ Intention of buyer 0
 11
 
 MONITOR
-9
-310
-136
-355
+6
+293
+133
+338
 Desire of buyer 0
 [desire] of buyer 0
 17
@@ -274,10 +285,10 @@ Desire of buyer 0
 11
 
 MONITOR
-6
-104
-707
-149
+8
+100
+711
+145
 Current bids (format: [buyer-id money]
 [table:get beliefs \"bids\"] of one-of auctioneers
 17
@@ -285,10 +296,10 @@ Current bids (format: [buyer-id money]
 11
 
 PLOT
-10
-377
-517
-618
+740
+404
+1247
+645
 Bid price
 Tick
 Price
@@ -305,10 +316,10 @@ PENS
 "profit" 1.0 0 -11221820 true "" "let lb 0\nlet b 0\n\nifelse count auctioneers > 0\n[\nask one-of auctioneers\n[set lb length (table:get beliefs \"bids\")\nset b table:get beliefs \"profit\"]\nif lb != 0[\nplot b]\n][]"
 
 MONITOR
-287
-310
-418
-355
+276
+293
+419
+338
 Money of buyer 0
 [table:get beliefs \"money\"] of buyer 0
 17
@@ -333,10 +344,10 @@ NIL
 1
 
 MONITOR
-303
-199
-454
-244
+286
+197
+424
+242
 Profit of auctioneer
 [table:get beliefs \"profit\"] of one-of auctioneers
 17
@@ -344,25 +355,25 @@ Profit of auctioneer
 11
 
 SLIDER
-437
-315
-609
-348
+6
+452
+184
+485
 num-buyers
 num-buyers
 2
 5
-4
+5
 1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-543
-376
-668
-409
+194
+452
+319
+485
 fakebuyer
 fakebuyer
 0
@@ -370,10 +381,10 @@ fakebuyer
 -1000
 
 MONITOR
-540
-420
-885
-465
+7
+344
+312
+389
 fake buyer's incoming messages
 [incoming-messages] of one-of fake-buyers
 17
@@ -381,10 +392,10 @@ fake buyer's incoming messages
 11
 
 MONITOR
-539
-479
-885
-524
+311
+344
+646
+389
 fake buyer's outgoing messages
 [outgoing-messages] of one-of fake-buyers
 17
@@ -392,10 +403,10 @@ fake buyer's outgoing messages
 11
 
 MONITOR
-897
-419
-1098
-464
+7
+388
+135
+433
 desire of fake buyer
 [desire] of one-of fake-buyers
 17
@@ -403,15 +414,63 @@ desire of fake buyer
 11
 
 MONITOR
-897
-478
-1115
-523
+135
+388
+278
+433
 intention of fake buyer
 [intention] of one-of fake-buyers
 17
 1
 11
+
+SLIDER
+4
+495
+182
+528
+initial-buyer-money
+initial-buyer-money
+50
+1000
+240
+10
+1
+NIL
+HORIZONTAL
+
+SLIDER
+194
+496
+366
+529
+number-of-goods
+number-of-goods
+1
+15
+10
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+535
+405
+735
+555
+Social welfare
+time
+SW
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot social-welfare"
 
 @#$#@#$#@
 ## WHAT IS IT?
