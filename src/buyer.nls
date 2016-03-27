@@ -106,32 +106,34 @@ end
 
 to update-buyer-intentions
   ask buyers [
-    ;; Determine how much we want to bid on the current auction
-    let bid false
-    if table:has-key? beliefs "auctioned good" [
-			let goodtype ""
-			ask good table:get beliefs "auctioned good" [ set goodtype good-type ]
-
-      if ((not (table:has-key? beliefs "current buyer")) or not ((table:get beliefs "current buyer") = who))
-				 		 	and table:get wishlist goodtype > 0 [
-        set bid (basic-bid-strategie (table:get beliefs "auctioned good") (table:get beliefs "current bid"))
+    if desire = "minimize-price" [
+      ;; Determine how much we want to bid on the current auction
+      let bid false
+      if table:has-key? beliefs "auctioned good" [
+  			let goodtype ""
+  			ask good table:get beliefs "auctioned good" [ set goodtype good-type ]
+  
+        if ((not (table:has-key? beliefs "current buyer")) or not ((table:get beliefs "current buyer") = who))
+  				 		 	and table:get wishlist goodtype > 0 [
+          set bid (basic-bid-strategie (table:get beliefs "auctioned good") (table:get beliefs "current bid"))
+        ]
       ]
+  
+  		ifelse is-list? table:get beliefs "bought good"[
+  			set intention  fput "store good" table:get beliefs "bought good"
+  			table:put beliefs "bought good" false
+  		][
+      ;; Bidding intentions contains the bid price
+      ifelse is-number? bid [
+        set intention (list "bid" bid)
+      ][
+      ;; Intention to pass the current round
+      ifelse bid = false and (table:has-key? beliefs "auctioned good") or (table:get beliefs "money") <= 0 [
+        set intention ["pass"]
+      ][
+      set intention [""]
+      ]]]
     ]
-
-		ifelse is-list? table:get beliefs "bought good"[
-			set intention  fput "store good" table:get beliefs "bought good"
-			table:put beliefs "bought good" false
-		][
-    ;; Bidding intentions contains the bid price
-    ifelse is-number? bid [
-      set intention (list "bid" bid)
-    ][
-    ;; Intention to pass the current round
-    ifelse bid = false and (table:has-key? beliefs "auctioned good") or (table:get beliefs "money") <= 0 [
-      set intention ["pass"]
-    ][
-    set intention [""]
-    ]]]
   ]
 end
 
