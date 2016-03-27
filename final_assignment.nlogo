@@ -1,8 +1,8 @@
-; UVA/VU - Multi-Agent Systems
+ ; UVA/VU - Multi-Agent Systems
 ; Lecturers: T. Bosse & M.C.A. Klein
 ; Lab assistants: D. Formolo & L. Medeiros
 
-__includes["src/buyer.nls" "src/auctioneer.nls" "src/good.nls" "src/fakebuyer.nls" "src/textfield.nls"]
+__includes["src/buyer.nls" "src/auctioneer.nls" "src/good.nls"  "src/textfield.nls"]
 
 ; --- Global variables ---
 ; The following global variables are given.
@@ -17,10 +17,9 @@ to setup
   reset-ticks
   clear-turtles
   setup-patches
-  setup-buyers
-  setup-fake-buyers
   setup-goods
   setup-auctioneers
+  setup-buyers
   setup-ticks
 end
 
@@ -57,35 +56,30 @@ end
 to update-desires
   update-auctioneers-desires
   update-buyer-desires
-  update-fakebuyers-desires
 end
 
 ; --- Update beliefs ---
 to update-beliefs
   update-auctioneers-beliefs
   update-buyer-beliefs
-  update-fakebuyers-beliefs
 end
 
 ; --- Update intentions ---
 to update-intentions
   update-auctioneers-intentions
   update-buyer-intentions
-  update-fakebuyers-intentions
 end
 
 ; --- Execute actions ---
 to execute-actions
  execute-auctioneers-actions
  execute-buyer-actions
- execute-fakebuyers-actions
 end
 
 ; --- Send messages ---
 to send-messages
   send-auctioneers-messages
   send-buyer-messages
-  send-fakebuyers-messages
 end
 
 
@@ -98,18 +92,11 @@ to visualize
     ]
   ]
 
-  ask fake-buyers [
-    if first intention = "bid" [
-      get-a-textfield self round item 1 intention
-    ]
-
   ask auctioneers [
     if intention = "sell item"
     [
       get-a-textfield self "sold"
     ]
-  ]
-
   ]
 end
 @#$#@#$#@
@@ -179,8 +166,8 @@ MONITOR
 56
 711
 101
-Beliefs of auctioneer
-[beliefs] of one-of auctioneers
+Beliefs of auctioneer 5
+[beliefs] of auctioneer 5
 17
 1
 11
@@ -190,8 +177,8 @@ MONITOR
 153
 316
 198
-Incoming messenges of auctioneer
-[incoming-messages] of one-of auctioneers
+Incoming messenges of auctioneer 5
+[incoming-messages] of auctioneer 5
 17
 1
 11
@@ -201,8 +188,8 @@ MONITOR
 153
 648
 198
-outgoing messages of auctioneer
-[outgoing-messages] of one-of auctioneers
+outgoing messages of auctioneer 5
+[outgoing-messages] of auctioneer 5
 17
 1
 11
@@ -210,10 +197,10 @@ outgoing messages of auctioneer
 MONITOR
 7
 199
-151
+174
 244
-Desires of auctioneer
-[desire] of one-of auctioneers
+Desires of auctioneer 5
+[desire]of auctioneer 5
 17
 1
 11
@@ -224,7 +211,7 @@ MONITOR
 290
 244
 Intention of auctioneer
-[intention] of one-of auctioneers
+[intention] of auctioneer 5
 17
 1
 11
@@ -235,7 +222,7 @@ MONITOR
 313
 309
 NIL
-[incoming-messages] of buyer 0
+[incoming-messages] of buyer 11
 17
 1
 11
@@ -246,7 +233,7 @@ MONITOR
 649
 309
 NIL
-[outgoing-messages] of buyer 0
+[outgoing-messages] of buyer 11
 17
 1
 11
@@ -257,7 +244,7 @@ MONITOR
 281
 355
 Intention of buyer 0
-[intention] of buyer 0
+[intention] of buyer 11
 17
 1
 11
@@ -268,7 +255,7 @@ MONITOR
 136
 355
 Desire of buyer 0
-[desire] of buyer 0
+[desire] of buyer 11
 17
 1
 11
@@ -278,8 +265,8 @@ MONITOR
 104
 707
 149
-Current bids (format: [buyer-id money]
-[table:get beliefs \"bids\"] of one-of auctioneers
+Current bids (format: [buyer-id money] auctioneer 5
+[table:get beliefs \"bids\"] of auctioneer 5
 17
 1
 11
@@ -307,10 +294,10 @@ PENS
 MONITOR
 287
 310
-418
+421
 355
-Money of buyer 0
-[table:get beliefs \"money\"] of buyer 0
+Money of buyer 11
+[table:get beliefs \"money\"] of buyer 11
 17
 1
 11
@@ -337,8 +324,8 @@ MONITOR
 199
 454
 244
-Profit of auctioneer
-[table:get beliefs \"profit\"] of one-of auctioneers
+Profit of auctioneer 5
+[table:get beliefs \"profit\"] of auctioneer 5
 17
 1
 11
@@ -357,61 +344,6 @@ num-buyers
 1
 NIL
 HORIZONTAL
-
-SWITCH
-543
-376
-668
-409
-fakebuyer
-fakebuyer
-0
-1
--1000
-
-MONITOR
-540
-420
-885
-465
-fake buyer's incoming messages
-[incoming-messages] of one-of fake-buyers
-17
-1
-11
-
-MONITOR
-539
-479
-885
-524
-fake buyer's outgoing messages
-[outgoing-messages] of one-of fake-buyers
-17
-1
-11
-
-MONITOR
-897
-419
-1098
-464
-desire of fake buyer
-[desire] of one-of fake-buyers
-17
-1
-11
-
-MONITOR
-897
-478
-1115
-523
-intention of fake buyer
-[intention] of one-of fake-buyers
-17
-1
-11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -834,7 +766,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

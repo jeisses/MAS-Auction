@@ -10,11 +10,14 @@ breed [buyers buyer]
 ; 4) private-value: the agen't private value for a good (currently there is only 1 good)
 ; 5) outgoing-messages
 ; 6) incomming-messages
-buyers-own [beliefs desire intention private-value outgoing-messages incoming-messages wishlist]
+buyers-own [beliefs desire intention private-value outgoing-messages incoming-messages wishlist auctrs aucs_wi]
 
 to setup-buyers
-  create-buyers num-buyers [
-    setxy 4 + min-pxcor + who * 3 min-pycor + 3
+	 let xcoords [ -8 -6 -4 -2 0 2 4 6 8 ]
+	 create-buyers num-buyers [
+	 	let xc first xcoords
+    setxy xc min-pycor + 3
+		set xcoords remove-item 0 xcoords
     set heading 90
     set color red
     set shape "person"
@@ -36,14 +39,27 @@ to setup-buyers
     table:put beliefs "value" private-value
 		table:put beliefs "wishlist" wishlist
 		table:put beliefs "bought good" false
-
+		
     set desire "minimize-price"
     set intention [""]
     set incoming-messages (list)
     set outgoing-messages (list)
 
+		let aucs (list)
+		set aucs_wi table:make
+		ask auctioneers [ set aucs fput who aucs ]
+		print aucs
+		let i 0
 		
-  ]
+		repeat length aucs [
+			table:put aucs_wi item i aucs i
+			set i i + 1
+		]
+		print aucs_wi
+		set auctrs (list)
+		repeat length aucs [ set auctrs fput table:make auctrs ]
+		
+		]
 end
 
 to update-buyer-beliefs
@@ -54,22 +70,22 @@ to update-buyer-beliefs
 
     foreach incoming-messages [
       ;; Message with base prices of all goods. Format is:
-      ;; ["price list" [p1 p2 p3 ...]]
-      ifelse first ? = "price list" [
-        table:put beliefs "price list" item 1 ?
+      ;; ["price list" auctioneer_id [p1 p2 p3 ...]]
+      ifelse first ? = "price" [
+        table:put item ( table:get aucs_wi item 1 ? ) auctrs "price" item 2 ?
       ][
       ;; Message about what good is being sold. Format is: 
-      ;; ["auction" good-turtle-id current-bid]
+      ;; ["auction" auctioneer_id good-turtle-id current-bid]
       ifelse first ? = "auction" [
         ;; print ?
-        table:put beliefs "auctioned good" item 1 ?
-        table:put beliefs "current bid" item 2 ?
+        table:put item ( table:get aucs_wi item 1 ? ) auctrs "auctioned good" item 2 ?
+        table:put item ( table:get aucs_wi item 1 ? ) auctrs "bid" item 3 ?
       ][
       ;; Message containing the current highest bid. Format is:
-      ;; ["current bid" buyer-id price]
+      ;; ["current bid" auctioneer_id buyer-id price]
       ifelse first ? = "current bid" [
-        table:put beliefs "current buyer" item 1 ?
-        table:put beliefs "current bid" item 2 ?
+        table:put item ( table:get aucs_wi item 1 ? ) auctrs "current buyer" item 2 ?
+        table:put item ( table:get aucs_wi item 1 ? ) auctrs "bid" item 3 ?
       ][
 			;; Message announcing sale
 			;; ["deal" buyer_id price good_id auctioneer_id]
@@ -79,15 +95,15 @@ to update-buyer-beliefs
 				ask good item 3 ? [ set gtype good-type ] 
 				table:put wishlist gtype (table:get wishlist gtype - 1)
 				table:put beliefs "bought good" (list item 3 ? item 4 ? item 2 ?)
-        table:remove beliefs "auctioned good"
-        table:remove beliefs "current buyer"
-        table:remove beliefs "current bid"
+        table:remove item ( table:get aucs_wi item 1 ? ) auctrs  "auctioned good"
+        table:remove item ( table:get aucs_wi item 1 ? ) auctrs  "current buyer"
+        table:remove item ( table:get aucs_wi item 1 ? ) auctrs  "current bid"
 			][
       ;; Auction for the current good is closed 
       ifelse first ? = "close auction" or first ? = "deal" [
-        table:remove beliefs "auctioned good"
-        table:remove beliefs "current bid"
-        table:remove beliefs "current buyer"
+        table:remove item ( table:get aucs_wi item 1 ? ) auctrs  "auctioned good"
+        table:remove item ( table:get aucs_wi item 1 ? ) auctrs  "current bid"
+        table:remove item ( table:get aucs_wi item 1 ? ) auctrs  "current buyer"
       ][]]]]]
     ] 
     set incoming-messages []

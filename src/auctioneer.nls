@@ -2,42 +2,37 @@ breed [auctioneers auctioneer]
 
 ; --- Auctioneer variables ---
 ;
-auctioneers-own [beliefs desire intention incoming-messages outgoing-messages]
+auctioneers-own [beliefs desire intention incoming-messages outgoing-messages nr-of-auctioneers ]
 
 ; --- Global variables ---
 ; * Position of patch where auctioned good recides
 globals [auction-xcor auction-ycor]
 
 ; --- Setup auctioneers ---
-to setup-auctioneers  
-  let num-auctioneers 1
+to setup-auctioneers
+	let xcoords [ -4 -2 0 2 4   ]
+  let num-auctioneers 5
   create-auctioneers num-auctioneers [
-    setxy 0 max-pycor - 3
-    set heading 180
+		set nr-of-auctioneers num-auctioneers
+		let xc first xcoords
+    setxy xc max-pycor - 4
+		set xcoords remove-item 0 xcoords
+		set heading 180
     set color green
     set shape "person business"
     
-    ;; Setup the patch where the auctioned good is
-    set auction-xcor xcor - 1
-    set auction-ycor ycor
-    ask patch auction-xcor auction-ycor [ set pcolor gray ]
-    
     ;; Store initial values of auctioneer
     set beliefs table:make
-    let all-goods sort-by < [who] of goods
-    let price-list [good-price] of goods
-    let current-good-price 0
-    ask good item 0 all-goods [set current-good-price good-price]
-    
+    let goods_id who - 5
+		let price [good-price] of goods
+   
     ;; Setup beliefs table
     ;; The auctioneer starts with beliefs about the available goods
-    table:put beliefs "all goods" all-goods       ; list of unsold goods
-    table:put beliefs "price list" price-list
-    table:put beliefs "current good" false        
-    table:put beliefs "current price" -1
+    table:put beliefs "goods-id" goods_id       ; good id of stack of unsold goods
+    table:put beliefs "current price" price
     table:put beliefs "num bids" 0                ; count number of bids this round
     table:put beliefs "num passes" 0              ; count number of passes this round
-    table:put beliefs "published pricelist" false ; remember if we already published prices
+    table:put beliefs "published price" false ; remember if we already published prices
     table:put beliefs "published bid" true        ; remember if we communicated the highest bid
     table:put beliefs "bids" (list)
     table:put beliefs "profit" 0                  ; profit of the auctioneer
@@ -56,73 +51,55 @@ to update-auctioneers-beliefs
     set outgoing-messages (list)
     
     ;; If last intention was publish prices, add this to beliefs
-    if intention = "publish pricelist" [ table:put beliefs "published pricelist" true ]
+    if intention = "publish price" [ table:put beliefs "published price" true ]
     if intention = "publish bid" [ table:put beliefs "published bid" true ]
     
     ;; Last intention was to remove a good
     if intention = "remove good" [
-      table:put beliefs "all goods" (remove (table:get beliefs "current good") (table:get beliefs "all goods"))
-      table:put beliefs "current good" false
+      ask good table:get beliefs "goods-id" [ set amount amount - 1]
       table:put beliefs "current price" -1
     ] 
     
     if intention = "sell item" [
-      let good-id table:get beliefs "current good"
-      table:put beliefs "all goods" remove (table:get beliefs "current good") (table:get beliefs "all goods")
-      ask good good-id [ set sold true ]
-      let prices (list)
-      ask goods [ if not sold [set prices fput good-price prices]]
-      table:put beliefs "price list" prices
-      table:put beliefs "current good" false        
-      table:put beliefs "current price" -1
+      table:put beliefs "current price" [good-price] of good table:get beliefs "all-goods"
       table:put beliefs "num bids" 0                
       table:put beliefs "published pricelist" false 
       table:put beliefs "published bid" true        
       table:put beliefs "bids" (list)   
     ]
 
-    ;; Update beliefs about the good being auctioned
-    if table:get beliefs "current good" = false and length table:get beliefs "all goods" > 0 [
-      let cur-good false
-      let cur-price -1
-      ask goods-at -1 0 [ set cur-good who set cur-price good-price ]
-      table:put beliefs "current good" cur-good
-      table:put beliefs "current price" cur-price
-    ]
-    
     table:put beliefs "num bids" 0
     table:put beliefs "num passes" 0
     
     ;; Parse incomming messages
     foreach incoming-messages [
       ;; Bid message. Format is:
-      ;; ["bid" buyer-id price]
-      ifelse first ? = "bid" [
-        table:put beliefs "bids" (fput (list (item 1 ?) (item 2 ?))  (table:get beliefs "bids"))
+      ;; ["bid" auctioneer-id buyer-id price]
+      ifelse first ? = "bid" and item 1 ? = who [
+        table:put beliefs "bids" (fput (list (item 2 ?) (item 3 ?))  (table:get beliefs "bids"))
         table:put beliefs "published bid" false
         sort-bids
         table:put beliefs "num bids" table:get beliefs "num bids" + 1
       ][
       ;; keep track of number of passes
-      ifelse first ? = "pass" [
+      ifelse first ? = "pass" and item 1 ? = who [
         table:put beliefs "num passes" table:get beliefs "num passes" + 1
       ][
 			;; message to selling auctioneer ["deal" auctioneer_id good_id price ]			;; 
 			ifelse first ? = "deal" and item 1 ? = who [
-				table:put beliefs "all goods" remove item 2 ? table:get beliefs "all goods"
-				ask good item 2 ? [ set sold true ]
-				let prices (list)
-				ask goods [ if not sold [set prices fput good-price prices]]
-				table:put beliefs "price list" prices
-    		table:put beliefs "current good" false        
+				ask good  table:get beliefs "goods-id" [ set amount amount - 1 ]
+				let price 0
+				ask good table:get beliefs "goods-id" [ if not sold [set price good-price ]]
+				table:put beliefs "price" price
     		table:put beliefs "current price" -1
     		table:put beliefs "num bids" 0                
-    		table:put beliefs "published pricelist" false 
+    		table:put beliefs "published price" false 
     		table:put beliefs "published bid" true        
     		table:put beliefs "bids" (list)
 			][]]]
       set incoming-messages (list)
-    ]    
+    ]
+		if table:get beliefs "num bids" > 0 [ table:put beliefs "current price" item 1 first table:get beliefs "bids"]
   ] 
 end
 
@@ -130,28 +107,24 @@ end
 to update-auctioneers-desires
   ask auctioneers [
     ;; Shutdown if all is sold
-    if length table:get beliefs "all goods" = 0 [ set desire "shutdown" ]
+		if [amount] of good table:get beliefs "goods-id" < 1 [ set desire "shutdown" ]
   ]
 end
 
 ; --- Update the auctioneers' intentions ---
 to update-auctioneers-intentions
   ask auctioneers [
-    let num-goods length table:get beliefs "all goods"
+    let num-goods [amount] of good table:get beliefs "goods-id"
     
     ; If the desire is to auction goods  
     if desire = "maximize price" [
       ; Check if we already published prices
-      ifelse table:get beliefs "published pricelist" = false [
-        set intention "publish pricelist"
+      ifelse table:get beliefs "published price" = false and num-goods > 0 [
+        set intention "publish price"
       ][
       ; After receiving bids, publish the highest bid
       ifelse table:get beliefs "published bid" = false [
         set intention "publish bid"
-      ][
-      ; If there's goods available then prepare them
-      ifelse num-goods > 0 and count (goods-at -1 0) = 0 [
-        set intention "fetch good"
       ][
       ; If there are no more bids sell item to highest bidder
       ifelse not empty? (table:get beliefs "bids") and table:get beliefs "num bids" = 0 [
@@ -162,9 +135,8 @@ to update-auctioneers-intentions
         set intention "remove good"
       ][
       ; If there's a good ready we can auction it
-      ifelse is-number? (table:get beliefs "current good") [
-        set intention "auction good"
-      ][]]]]]]
+      set intention "auction good"
+      ]]]]
     ]
     
     ; Shutdown is the desire when there are no more goods
@@ -179,37 +151,28 @@ to execute-auctioneers-actions
   ask auctioneers [
     ifelse intention = "close auction" [
     ][
-    ifelse intention = "publish pricelist" [
-      set outgoing-messages (list (list  "price list" (table:get beliefs "price list")))
+    ifelse intention = "publish price" [
+      set outgoing-messages (list (list  "price" who (table:get beliefs "current price")))
     ][
     ifelse intention = "publish bid" [
       let highest-bid first table:get beliefs "bids"
-      set outgoing-messages (list (list "current bid" first highest-bid (item 1 highest-bid)))
-    ][
-    ifelse intention = "fetch good" [
-      ask one-of goods with [sold = false] [
-        set xcor auction-xcor
-        set ycor auction-ycor
-      ]
+      set outgoing-messages (list (list "current bid" who first highest-bid (item 1 highest-bid)))
     ][
     ifelse intention = "auction good" [
-      let current-good-price 0
-      ask goods-at -1 0 [set current-good-price good-price]
+      let current-good-price [good-price] of good table:get beliefs "goods-id"
       table:put beliefs "current price" current-good-price
-      set outgoing-messages (list (list "auction" (table:get beliefs "current good") (table:get beliefs "current price")))
+      set outgoing-messages (list (list "auction" who ([good-type] of good table:get beliefs "goods-id") (table:get beliefs "current price")))
     ][
 		ifelse intention = "sell item" [
 			let highest first table:get beliefs "bids"
 			let buyer_id item 0 highest
 			let price item 1 highest
-			let good_id table:get beliefs "current good"
 			table:put beliefs "profit" table:get beliefs "profit" + (price - table:get beliefs "current price") 
-			set outgoing-messages (list (list "deal" buyer_id price good_id who))
+			set outgoing-messages (list (list "deal" buyer_id price [good-type] of good table:get beliefs "goods-id" who))
 		][
     ifelse intention = "remove good" [
-      ask goods-at -1 0 [ setxy 5 5 set sold true]
       set outgoing-messages (list (list "close auction"))
-    ][]]]]]]]
+    ][]]]]]]
   ]
 end
 
@@ -227,11 +190,6 @@ to send-auctioneers-messages
     ask buyers [
       (foreach msgs [
          set incoming-messages fput ? incoming-messages 
-      ])
-    ]
-    ask fake-buyers[
-      (foreach msgs[
-          set incoming-messages fput ? incoming-messages
       ])
     ]
   ]

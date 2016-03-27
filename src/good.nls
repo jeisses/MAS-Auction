@@ -1,20 +1,39 @@
 breed [goods good]
 
 ; --- A good's own variables ---
-goods-own[good-type good-price sold]
+goods-own[good-type good-price sold amount]
 
 to setup-goods
-  let num-goods 10
+  let num-goods 5
+	let xcoords [ -4 -2 0 2 4   ]
   create-goods num-goods
   [
-    setxy 0 + min-pxcor + who * 1 max-pycor - 1
-    let all-good-types ["wood"] ;can be expanded
-    set good-type item 0 all-good-types
+		let xc first xcoords
+    setxy xc max-pycor - 4
+		set xcoords remove-item 0 xcoords
+	
+    setxy xc max-pycor - 1
+    let all-good-types ["wood" "steel" "stone" "food"] ;can be expanded
+    set good-type item random (4) all-good-types
     if good-type = "wood"
     [
       set shape "garbage-can"
       set color brown
     ]
+		if good-type = "steel"
+    [
+      set shape "garbage-can"
+      set color blue
+    ]if good-type = "stone"
+    [
+      set shape "garbage-can"
+      set color green
+    ]if good-type = "food"
+    [
+      set shape "garbage-can"
+      set color pink
+    ]
+		set amount 5 + random (10)
     set good-price  15 + random (10)
     set label good-price
     set sold false 
