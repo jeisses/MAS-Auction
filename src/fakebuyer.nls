@@ -67,11 +67,11 @@ to update-fakebuyers-beliefs
       ;; Message announcing sale
       ;; ["deal" buyer_id price good_id auctioneer_id]
       ifelse first ? = "deal" and item 1 ? = who [
-        table:put beliefs "money" table:get beliefs "money" - item 2 ? 
+        ;;table:put beliefs "money" table:get beliefs "money" - item 2 ? 
         let gtype ""
         ask good item 3 ? [ set gtype good-type ] 
-        table:put wishlist gtype (table:get wishlist gtype - 1)
-        table:put beliefs "bought good" (list item 3 ? item 4 ? item 2 ?)
+       ;; table:put wishlist gtype (table:get wishlist gtype - 1)
+       ;; table:put beliefs "bought good" (list item 3 ? item 4 ? item 2 ?)
         table:remove beliefs "auctioned good"
         table:remove beliefs "current buyer"
         table:remove beliefs "current bid"

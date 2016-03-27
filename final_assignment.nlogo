@@ -300,7 +300,7 @@ PLOT
 404
 1247
 645
-Bid price
+Bid price and profit
 Tick
 Price
 0.0
@@ -312,8 +312,8 @@ true
 "" ""
 PENS
 "bids" 1.0 0 -16777216 true "" "let lb 0\nlet b 0\n\nifelse count auctioneers > 0 [ \nask one-of auctioneers\n[\nset lb length (table:get beliefs \"bids\")\nif lb > 0\n[set b item 1 (first table:get beliefs \"bids\")]\n]\n  plot b \n][]"
-"sold-goods" 1.0 0 -2674135 true "" "let lb 0\n\nifelse count auctioneers > 0[\nask one-of auctioneers\n[\nset lb length (table:get beliefs \"bids\")]\nif lb > 0[ \n  plot count goods with [sold = true]]\n][]"
-"profit" 1.0 0 -11221820 true "" "let lb 0\nlet b 0\n\nifelse count auctioneers > 0\n[\nask one-of auctioneers\n[set lb length (table:get beliefs \"bids\")\nset b table:get beliefs \"profit\"]\nif lb != 0[\nplot b]\n][]"
+"sold-goods" 1.0 0 -2674135 true "" "let lb 0\nplot count goods with [sold = true]"
+"profit" 1.0 0 -11221820 true "" "let lb 0\nlet b 0\n\nifelse count auctioneers > 0\n[\nask one-of auctioneers\n[set lb length (table:get beliefs \"bids\")\nset b table:get beliefs \"profit\"]\nplot b\n][plot b]"
 
 MONITOR
 276
