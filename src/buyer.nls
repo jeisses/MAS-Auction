@@ -23,7 +23,7 @@ to setup-buyers
     set shape "person"
     
     ; Initial money is random
-    let money 100 + (random 40)
+    let money 1000 + (random 40000)
     
     ; Draw the buyer's private-values from a normal distribution 
     set private-value (round (random-normal 50 5))
@@ -36,10 +36,10 @@ to setup-buyers
 		table:put wishlist "stone" random 3 + 5
 
 		set valuations table:make
-		table:put valuations "wood" random 3 + 5
-		table:put valuations "steel" random 3 + 5
-		table:put valuations "food" random 3 + 5
-		table:put valuations "stone" random 3 + 5
+		table:put valuations "wood" random 20 + 5
+		table:put valuations "steel" random 20 + 5
+		table:put valuations "food" random 20 + 5
+		table:put valuations "stone" random 20 + 5
 
 		set beliefs table:make
     
@@ -99,6 +99,8 @@ to update-buyer-beliefs
 			;; Message announcing sale
 			;; ["deal" buyer_id price good_id auctioneer_id]
 			ifelse first ? = "deal" and item 2 ? = who [
+				print who
+				print "deal"
         table:put beliefs "money" table:get beliefs "money" - item 3 ? 
 				let gtype item 4 ?
 				table:put wishlist gtype (table:get wishlist gtype - 1)
@@ -144,7 +146,8 @@ to update-buyer-intentions
 			]
       set bid (basic-bid-strategie (goodtype) (currentbid))
     ]
-    
+
+		show bid
 
 		ifelse is-list? table:get beliefs "bought good"[
 			set intention  fput "store good" table:get beliefs "bought good"
@@ -179,7 +182,8 @@ to execute-buyer-actions
 		ifelse first intention = "store good" [
 			let xc xcor
 			let yc ycor
-			
+			print who
+			print wishlist
 			ask patch xc (yc - 2) [ set pcolor white ]
 			;; message to selling auctioneer ["deal" auctioneer_id good_id price ]
 			set outgoing-messages fput (list "deal" item 2 intention item 1 intention item 3 intention) outgoing-messages
@@ -209,10 +213,11 @@ end
 ; Place bid if private-value is higher than current-bid. Currently always
 ; bids when private value is larger than current-bid. Should be extended.
 to-report basic-bid-strategie [goodtype current-bid]
-  let wishvalue (table:get wishlist goodtype) / 100
+  let wishvalue (table:get wishlist goodtype) 
   let money table:get beliefs "money"
-  if money > current-bid[
-    report min (list money (current-bid + wishvalue * money))
+  if money > current-bid and current-bid < wishvalue * 20 [
+    ;;report min (list money (current-bid + wishvalue * money))
+		report current-bid + random 3 + 1
   ]
   report false
 end
@@ -225,9 +230,11 @@ to-report sort-wishes
 end
 
 to-report select-auction
+	show table:get beliefs "wishes"
 	foreach table:get beliefs "wishes" [
 		let wish item 0 ?
 		foreach auctrs [ if table:has-key? ? "auctioned good" [ if table:get ? "auctioned good" = wish [ report table:get ? "id" ]]]
 	]
+	show "nothing selected"
 	report false
 end
